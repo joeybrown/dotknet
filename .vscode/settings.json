@@ -1,0 +1,15 @@
+{
+  "files.exclude": {
+    "*/**/bin": true,
+    "*/**/obj": true
+  },
+  "cSpell.words": [
+    "ˈnɛt",
+    "buildpacks",
+    "dɒtkə",
+    "dockerfiles",
+    "Dotknet",
+    "Knet",
+    "rootfs"
+  ]
+}

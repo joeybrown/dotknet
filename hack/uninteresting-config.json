@@ -1,0 +1,43 @@
+{
+  "architecture": "amd64",
+  "config": {
+    "Env": ["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"],
+    "Cmd": ["bash"],
+    "WorkingDir": "/app",
+    "OnBuild": null
+  },
+  "created": "2022-03-17T23:07:43.1052272Z",
+  "history": [{
+    "created": "2022-03-03T20:19:25.583974207Z",
+    "created_by": "/bin/sh -c #(nop) ADD file:dee0aa8497bd26ca41dffa17adff99be2523f66f9b2c557ba9ad2388ed052dca in / "
+  }, {
+    "created": "2022-03-03T20:19:25.833978217Z",
+    "created_by": "/bin/sh -c #(nop)  CMD [\"bash\"]",
+    "empty_layer": true
+  }, {
+    "created": "2022-03-17T23:07:40.8872847Z",
+    "created_by": "WORKDIR /app",
+    "comment": "buildkit.dockerfile.v0"
+  }, {
+    "created": "2022-03-17T23:07:41.5478749Z",
+    "created_by": "RUN /bin/sh -c touch foo.txt # buildkit",
+    "comment": "buildkit.dockerfile.v0"
+  }, {
+    "created": "2022-03-17T23:07:42.0719437Z",
+    "created_by": "RUN /bin/sh -c touch bar.txt \u0026\u0026 touch bat.txt \u0026\u0026 touch baz.txt # buildkit",
+    "comment": "buildkit.dockerfile.v0"
+  }, {
+    "created": "2022-03-17T23:07:42.538224Z",
+    "created_by": "RUN /bin/sh -c rm foo.txt bar.txt # buildkit",
+    "comment": "buildkit.dockerfile.v0"
+  }, {
+    "created": "2022-03-17T23:07:43.1052272Z",
+    "created_by": "RUN /bin/sh -c touch foo.txt # buildkit",
+    "comment": "buildkit.dockerfile.v0"
+  }],
+  "os": "linux",
+  "rootfs": {
+    "type": "layers",
+    "diff_ids": ["sha256:a4e25480be6bd70ea8f073f5af661a58e498b79f81d4d17a004bcbe54c7bd14d", "sha256:408f9d5f3d15eed8bf4d8222f412d9b31ff3a03dfa5ad0f9e8b088250bd4ba17", "sha256:696ce73af73df0cadc138303677488dfe4c28cd56f3353d90504b8ecf7d614a0", "sha256:ef83d9f342b197d9b6eaa152cac761ccd9c3468a2c103f58d8a827b30ad617d9", "sha256:30c19b3bca27157535797094a67b8bef996d150480454aaa0db35a61fe003c75", "sha256:61e3c70fe18484f437b5b495d47b225ea4cc097109830c9ff87ceb2f29045383"]
+  }
+}

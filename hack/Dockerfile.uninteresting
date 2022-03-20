@@ -1,0 +1,8 @@
+FROM ubuntu:18.04
+
+WORKDIR /app
+
+RUN touch foo.txt
+RUN touch bar.txt && touch bat.txt && touch baz.txt
+RUN rm foo.txt bar.txt
+RUN touch foo.txt
