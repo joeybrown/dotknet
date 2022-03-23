@@ -1,4 +1,4 @@
-namespace DotKnet.Core.Models;
+namespace Dotknet.Models;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -26,13 +26,14 @@ public class Hash
   public string Hex { get; private set; }
 }
 
-public interface IDescriptor {
-  string MediaType {get;}
-  int Size {get;}
-  Hash Digest {get;}
+public interface IDescriptor
+{
+  string MediaType { get; }
+  int Size { get; }
+  Hash Digest { get; }
 }
 
-public class LayerDescriptor: IDescriptor
+public class LayerDescriptor : IDescriptor
 {
   public string MediaType => Models.MediaType.Layer;
   public LayerDescriptor(int size, string digest)
@@ -45,7 +46,7 @@ public class LayerDescriptor: IDescriptor
   public Hash Digest { get; }
 }
 
-public class ConfigDescriptor: IDescriptor
+public class ConfigDescriptor : IDescriptor
 {
   public string MediaType => Models.MediaType.ContainerConfigJson;
   public ConfigDescriptor(int size, string digest)
@@ -76,11 +77,11 @@ public class Manifest
 
     public IEnumerable<DescriptorDto> Layers { get; set; } = Array.Empty<DescriptorDto>();
     [JsonPropertyName("config")]
-    public DescriptorDto Config {get;set;}
+    public DescriptorDto Config { get; set; }
   }
 
   public IEnumerable<LayerDescriptor> Layers { get; private set; }
-  public ConfigDescriptor Config {get; private set;}
+  public ConfigDescriptor Config { get; private set; }
 
   private Manifest(ConfigDescriptor config, IEnumerable<LayerDescriptor> layers)
   {

@@ -1,5 +1,5 @@
 using Xunit;
-using DotKnet.Core.Models;
+using Dotknet.Models;
 using FluentAssertions;
 using System.Linq;
 

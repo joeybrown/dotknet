@@ -1,4 +1,4 @@
-﻿namespace DotKnet.Core.Services;
+﻿namespace Dotknet.Services;
 public interface IManifestService
 {
 

@@ -6,9 +6,9 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/src/DotKnet.Console/bin/Debug/net6.0/DotKnet.Console.dll",
+      "program": "${workspaceFolder}/src/Dotknet.Cli/bin/Debug/net6.0/Dotknet.Cli.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/src/DotKnet.Console",
+      "cwd": "${workspaceFolder}/src/Dotknet.Cli",
       "console": "internalConsole",
       "stopAtEntry": false
     },
