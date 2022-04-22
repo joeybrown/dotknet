@@ -8,13 +8,13 @@ using System.CommandLine.NamingConventionBinder;
 using System.CommandLine.Builder;
 using System.CommandLine.Hosting;
 using System.CommandLine.Parsing;
-using static LogEvents;
 using Serilog;
 using Serilog.Events;
 
 class Program
 {
-  static async Task Main(string[] args) => await BuildCommandLine()
+  static async Task Main(string[] args) =>
+    await BuildCommandLine()
       .UseHost(_ => Host.CreateDefaultBuilder(), host =>
       {
         host.ConfigureLogging((context, config) =>
@@ -32,9 +32,9 @@ class Program
 
         host.ConfigureServices(services =>
         {
-          services.AddSingleton<ILifecycle, Lifecycle>();
+          services.AddOptions<LifecycleOptions>().BindCommandLine();
+          services.AddSingleton<IPublishCommand, PublishCommand>();
         });
-        
       })
       .UseDefaults()
       .Build()
@@ -43,28 +43,21 @@ class Program
   private static CommandLineBuilder BuildCommandLine()
   {
     var root = new RootCommand();
-    var publish = Publish();
-    root.Add(publish);
+    root.Add(Publish);
     return new CommandLineBuilder(root);
   }
 
-  private static Command Publish()
+  private static Command Publish
   {
-    var command = new Command("publish");
-    command.AddOption(new Option<DirectoryInfo>("--project-path")
+    get
     {
-      IsRequired = true
-    });
-    command.Handler = CommandHandler.Create<LifecycleOptions, IHost>((options, host) =>
-    {
-      var serviceProvider = host.Services;
-      var lifecycle = serviceProvider.GetRequiredService<ILifecycle>();
-      var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-      var logger = loggerFactory.CreateLogger(typeof(Program));
-      var projectPath = options.ProjectPath;
-      logger.LogInformation(PublishEvent, "Publish requested for: {project}", projectPath);
-      lifecycle.Publish(options);
-    });
-    return command;
+      var command = new Command("publish");
+      command.AddOption(new Option<DirectoryInfo>("--project-path")
+      {
+        IsRequired = true,
+      });
+      command.Handler = CommandHandler.Create<IHost>(host => host.Services.GetRequiredService<IPublishCommand>().Execute());
+      return command;
+    }
   }
 }
