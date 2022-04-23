@@ -1,12 +1,16 @@
+using System.CodeDom.Compiler;
+using Microsoft.CSharp;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Nuke.Common.Tooling;
+using Nuke.Common.Tools.DotNet;
 
 public interface IPublishCommand
 {
   void Execute();
 }
 
-public class PublishCommand: IPublishCommand
+public class PublishCommand : IPublishCommand
 {
   private readonly ILogger<PublishCommand> _logger;
   private readonly LifecycleOptions _options;
@@ -18,6 +22,13 @@ public class PublishCommand: IPublishCommand
   }
   public void Execute()
   {
-    _logger.LogInformation("Project location: {project}", _options.ProjectPath);
+    DotNetTasks.DotNetPublish(settings =>
+    {
+      settings.SetProject(_options.Project);
+      settings.SetOutput(_options.Output);
+      return settings;
+    });
+
+    _logger.LogInformation("Project: {project}; Output: {output}", _options.Project, _options.Output);
   }
 }

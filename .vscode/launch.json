@@ -9,8 +9,10 @@
       "program": "${workspaceFolder}/src/Dotknet.Cli/bin/Debug/net6.0/Dotknet.Cli.dll",
       "args": [
         "publish",
-        "--project-path",
-        "${workspaceFolder}/src/Dotknet.Cli"
+        "--project",
+        "${workspaceFolder}/src/Dotknet.Cli",
+        "--output",
+        "${workspaceFolder}/output"
       ],
       "cwd": "${workspaceFolder}/src/Dotknet.Cli",
       "console": "internalConsole",

@@ -1,4 +1,5 @@
 public class LifecycleOptions
 {
-  public DirectoryInfo? ProjectPath { get; set; }
+  public string Project { get; set; }
+  public string Output {get;set;}
 }

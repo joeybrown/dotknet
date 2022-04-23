@@ -21,7 +21,8 @@ class Program
         {
           config.ClearProviders();
           Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
+            .MinimumLevel.Information()
+            .MinimumLevel.Override("Dotknet", LogEventLevel.Debug)
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .MinimumLevel.Override("System", LogEventLevel.Warning)
             .Enrich.FromLogContext()
@@ -52,7 +53,11 @@ class Program
     get
     {
       var command = new Command("publish");
-      command.AddOption(new Option<DirectoryInfo>("--project-path")
+      command.AddOption(new Option<string>("--project")
+      {
+        IsRequired = true,
+      });
+      command.AddOption(new Option<string>("--output")
       {
         IsRequired = true,
       });
