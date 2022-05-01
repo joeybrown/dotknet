@@ -22,15 +22,11 @@ public class PublishCommand : IPublishCommand
 
   public void Execute()
   {
-    var output = DotNetTasks.DotNetPublish(settings =>
+    DotNetTasks.DotNetPublish(settings =>
     {
-      settings.SetProject(_options.Project);
-      settings.SetOutput(_options.Output);
-      return settings;
+      return settings
+        .SetProject(_options.Project)
+        .SetOutput(_options.Output);
     });
-
-    
-
-    _logger.LogInformation("Project: {project}; Output: {output}", _options.Project, _options.Output);
   }
 }

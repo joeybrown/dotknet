@@ -10,7 +10,7 @@
       "args": [
         "publish",
         "--project",
-        "${workspaceFolder}/src/Dotknet.Cli",
+        "${workspaceFolder}/src/Dotknet",
         "--output",
         "${workspaceFolder}/output"
       ],
@@ -25,9 +25,9 @@
       "preLaunchTask": "build",
       "program": "${workspaceFolder}/src/Dotknet.Cli/bin/Debug/net6.0/Dotknet.Cli.dll",
       "args": [
-        "append",
+        "archive",
         "--directoryToArchive",
-        "${workspaceFolder}/output",
+        "${workspaceFolder}/output/",
         "--archiveOutput",
         "${workspaceFolder}/layer.tar"
       ],

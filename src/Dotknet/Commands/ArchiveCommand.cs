@@ -1,6 +1,5 @@
 using ICSharpCode.SharpZipLib.Tar;
 using Microsoft.Extensions.Options;
-using System.IO.Compression;
 
 namespace Dotknet.Commands;
 
@@ -11,7 +10,6 @@ public interface IArchiveCommand
 
 ///
 /// https://github.com/dotnet/runtime/issues/65951
-///
 public class ArchiveCommand : IArchiveCommand
 {
   private readonly LifecycleOptions _options;
@@ -36,7 +34,7 @@ public static class MemoryStreamExtensions
   public static TarArchive CreateDirectoryArchive(this MemoryStream memoryStream, string sourceDirectory)
   {
     var tarArchive = TarArchive.CreateOutputTarArchive(memoryStream);
-    tarArchive.RootPath = "/dotknet-app";
+    tarArchive.RootPath = "dotknet-app";
     AddDirectoryFilesToTGZ(tarArchive, sourceDirectory);
     return tarArchive;
   }
