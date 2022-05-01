@@ -10,6 +10,7 @@ using System.CommandLine.Hosting;
 using System.CommandLine.Parsing;
 using Serilog;
 using Serilog.Events;
+using Dotknet.Commands;
 
 class Program
 {
@@ -35,6 +36,7 @@ class Program
         {
           services.AddOptions<LifecycleOptions>().BindCommandLine();
           services.AddSingleton<IPublishCommand, PublishCommand>();
+          services.AddSingleton<IArchiveCommand, ArchiveCommand>();
         });
       })
       .UseDefaults()
@@ -45,6 +47,7 @@ class Program
   {
     var root = new RootCommand();
     root.Add(Publish);
+    root.Add(Archive);
     return new CommandLineBuilder(root);
   }
 
@@ -62,6 +65,24 @@ class Program
         IsRequired = true,
       });
       command.Handler = CommandHandler.Create<IHost>(host => host.Services.GetRequiredService<IPublishCommand>().Execute());
+      return command;
+    }
+  }
+
+  private static Command Archive
+  {
+    get
+    {
+      var command = new Command("archive");
+      command.AddOption(new Option<string>("--directoryToArchive")
+      {
+        IsRequired = true,
+      });
+      command.AddOption(new Option<string>("--archiveOutput")
+      {
+        IsRequired = true,
+      });
+      command.Handler = CommandHandler.Create<IHost>(host => host.Services.GetRequiredService<IArchiveCommand>().Execute());
       return command;
     }
   }

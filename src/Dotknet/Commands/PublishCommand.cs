@@ -1,9 +1,8 @@
-using System.CodeDom.Compiler;
-using Microsoft.CSharp;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Nuke.Common.Tooling;
 using Nuke.Common.Tools.DotNet;
+
+namespace Dotknet.Commands;
 
 public interface IPublishCommand
 {
@@ -20,14 +19,17 @@ public class PublishCommand : IPublishCommand
     _logger = logger;
     _options = options.Value;
   }
+
   public void Execute()
   {
-    DotNetTasks.DotNetPublish(settings =>
+    var output = DotNetTasks.DotNetPublish(settings =>
     {
       settings.SetProject(_options.Project);
       settings.SetOutput(_options.Output);
       return settings;
     });
+
+    
 
     _logger.LogInformation("Project: {project}; Output: {output}", _options.Project, _options.Output);
   }

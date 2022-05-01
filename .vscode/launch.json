@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": ".NET Core Launch (console)",
+      "name": "Publish",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
@@ -13,6 +13,23 @@
         "${workspaceFolder}/src/Dotknet.Cli",
         "--output",
         "${workspaceFolder}/output"
+      ],
+      "cwd": "${workspaceFolder}/src/Dotknet.Cli",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Archive",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/Dotknet.Cli/bin/Debug/net6.0/Dotknet.Cli.dll",
+      "args": [
+        "append",
+        "--directoryToArchive",
+        "${workspaceFolder}/output",
+        "--archiveOutput",
+        "${workspaceFolder}/layer.tar"
       ],
       "cwd": "${workspaceFolder}/src/Dotknet.Cli",
       "console": "internalConsole",
