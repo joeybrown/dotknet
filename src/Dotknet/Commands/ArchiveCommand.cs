@@ -1,5 +1,6 @@
-using ICSharpCode.SharpZipLib.Tar;
 using Microsoft.Extensions.Options;
+using SharpCompress.Archives.Tar;
+using SharpCompress.Archives;
 
 namespace Dotknet.Commands;
 
@@ -8,7 +9,6 @@ public interface IArchiveCommand
   void Execute();
 }
 
-///
 /// https://github.com/dotnet/runtime/issues/65951
 public class ArchiveCommand : IArchiveCommand
 {
@@ -21,55 +21,25 @@ public class ArchiveCommand : IArchiveCommand
 
   public void Execute()
   {
-    using var archiveStream = new MemoryStream();
-    using var tarArchive = archiveStream.CreateDirectoryArchive(_options.DirectoryToArchive!);
-    using var fileStream = new FileStream(_options.ArchiveOutput!, FileMode.Create, FileAccess.Write);
-    archiveStream.WriteTo(fileStream);
+    using var tarArchive = TarArchive.Create();
+    tarArchive.AddAllFromDirectory(_options.DirectoryToArchive!, _options.LayerAppRoot);
+    var writerOptions = new SharpCompress.Writers.WriterOptions(SharpCompress.Common.CompressionType.None);
+    tarArchive.SaveTo(_options.ArchiveOutput!, writerOptions);
   }
 }
 
-public static class MemoryStreamExtensions
+public static class IWritableArchiveExtensions
 {
-  /// ref: https://stackoverflow.com/questions/31836519/how-to-create-tar-gz-file-in-c-sharp
-  public static TarArchive CreateDirectoryArchive(this MemoryStream memoryStream, string sourceDirectory)
+  public static void AddAllFromDirectory(this IWritableArchive writableArchive, string filePath, string rootDir, string searchPattern = "*.*", SearchOption searchOption = SearchOption.AllDirectories)
   {
-    var tarArchive = TarArchive.CreateOutputTarArchive(memoryStream);
-    tarArchive.RootPath = "dotknet-app";
-    AddDirectoryFilesToTGZ(tarArchive, sourceDirectory);
-    return tarArchive;
-  }
-
-  private static void AddDirectoryFilesToTGZ(TarArchive tarArchive, string sourceDirectory)
-  {
-    AddDirectoryFilesToTGZ(tarArchive, sourceDirectory, string.Empty);
-  }
-
-  private static void AddDirectoryFilesToTGZ(TarArchive tarArchive, string sourceDirectory, string currentDirectory)
-  {
-    var pathToCurrentDirectory = Path.Combine(sourceDirectory, currentDirectory);
-
-    // Write each file to the tgz.
-    var filePaths = Directory.GetFiles(pathToCurrentDirectory);
-    foreach (string filePath in filePaths)
+    using (writableArchive.PauseEntryRebuilding())
     {
-      var tarEntry = TarEntry.CreateEntryFromFile(filePath);
-
-      // Name sets where the file is written. Write it in the same spot it exists in the source directory
-      tarEntry.Name = filePath.Replace(sourceDirectory, "");
-
-      // If the Name starts with '\' then an extra folder (with a blank name) will be created, we don't want that.
-      if (tarEntry.Name.StartsWith('\\'))
+      foreach (var path in Directory.EnumerateFiles(filePath, searchPattern, searchOption))
       {
-        tarEntry.Name = tarEntry.Name.Substring(1);
+        var fileInfo = new FileInfo(path);
+        var key = rootDir + "/" + path.Substring(filePath.Length);
+        writableArchive.AddEntry(key, fileInfo.OpenRead(), true, fileInfo.Length, fileInfo.LastWriteTime);
       }
-      tarArchive.WriteEntry(tarEntry, true);
-    }
-
-    // Write directories to tgz
-    var directories = Directory.GetDirectories(pathToCurrentDirectory);
-    foreach (string directory in directories)
-    {
-      AddDirectoryFilesToTGZ(tarArchive, sourceDirectory, directory);
     }
   }
 }
