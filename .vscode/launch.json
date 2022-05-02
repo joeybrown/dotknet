@@ -27,9 +27,9 @@
       "args": [
         "archive",
         "--directoryToArchive",
-        "${workspaceFolder}/output/",
-        "--archiveOutput",
-        "${workspaceFolder}/layer.tar"
+        "${workspaceFolder}/output",
+        "--output",
+        "${workspaceFolder}/output"
       ],
       "cwd": "${workspaceFolder}/src/Dotknet.Cli",
       "console": "internalConsole",

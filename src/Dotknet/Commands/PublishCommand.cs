@@ -22,11 +22,8 @@ public class PublishCommand : IPublishCommand
 
   public void Execute()
   {
-    DotNetTasks.DotNetPublish(settings =>
-    {
-      return settings
+    DotNetTasks.DotNetPublish(settings => settings
         .SetProject(_options.Project)
-        .SetOutput(_options.Output);
-    });
+        .SetOutput(_options.Output));
   }
 }

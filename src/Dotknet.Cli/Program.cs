@@ -78,7 +78,7 @@ class Program
       {
         IsRequired = true,
       });
-      command.AddOption(new Option<string>("--archiveOutput")
+      command.AddOption(new Option<string>("--output")
       {
         IsRequired = true,
       });
