@@ -11,6 +11,7 @@ using System.CommandLine.Parsing;
 using Serilog;
 using Serilog.Events;
 using Dotknet.Commands;
+using Dotknet.Services;
 
 class Program
 {
@@ -37,6 +38,7 @@ class Program
           services.AddOptions<LifecycleOptions>().BindCommandLine();
           services.AddSingleton<IPublishCommand, PublishCommand>();
           services.AddSingleton<IArchiveCommand, ArchiveCommand>();
+          services.AddSingleton<IDigestService, DigestService>();
         });
       })
       .UseDefaults()

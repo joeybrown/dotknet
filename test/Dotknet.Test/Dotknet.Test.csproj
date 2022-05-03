@@ -25,4 +25,10 @@
     <ProjectReference Include="..\..\src\Dotknet\Dotknet.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="TestResources\layer.tar">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>  
+  </ItemGroup>
+
 </Project>

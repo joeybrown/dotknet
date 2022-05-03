@@ -5,6 +5,7 @@ using SharpCompress.Writers;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using Dotknet.Services;
 
 namespace Dotknet.Commands;
 
@@ -18,42 +19,45 @@ public interface IArchiveCommand
 public class ArchiveCommand : IArchiveCommand
 {
   private readonly LifecycleOptions _options;
-  private readonly WriterOptions _tarWriterOptions;
+  private readonly IDigestService _digestService;
   private readonly ILogger<ArchiveCommand> _logger;
+  private readonly WriterOptions _tarWriterOptions;
 
-  public ArchiveCommand(IOptions<LifecycleOptions> options, ILogger<ArchiveCommand> logger)
+  public ArchiveCommand(IOptions<LifecycleOptions> options, ILogger<ArchiveCommand> logger, IDigestService digestService)
   {
     _options = options.Value;
-    _tarWriterOptions = new SharpCompress.Writers.WriterOptions(SharpCompress.Common.CompressionType.None);
+    _digestService = digestService;
     _logger = logger;
+    _tarWriterOptions = new SharpCompress.Writers.WriterOptions(SharpCompress.Common.CompressionType.None);
   }
 
   public void Execute()
   {
+    // todo: clean this up
     using var tarArchive = TarArchive.Create();
     tarArchive.AddAllFromDirectory(_options.DirectoryToArchive!, _options.LayerAppRoot);
-
+    
     using var memoryStream = new MemoryStream();
     tarArchive.SaveTo(memoryStream, _tarWriterOptions);
-
-    using var sha256Hash = SHA256.Create();
-    var layerDigest = GetHash(sha256Hash, memoryStream);
-    var destination = Path.Join(_options.Output!, layerDigest! + ".tar");
     
-    using var fileStream = new FileStream(destination!, FileMode.Create, FileAccess.Write);
-    memoryStream.WriteTo(fileStream);
-    _logger.LogInformation("Layer Digest: {LayerDigest}", "sha256:" + layerDigest);
-  }
+    var memoryDigest = _digestService.GetDigest(memoryStream);
 
-  private static string GetHash(HashAlgorithm hashAlgorithm, MemoryStream input)
-  {
-    var data = hashAlgorithm.ComputeHash(input.GetBuffer());
-    var sBuilder = new StringBuilder();
-    for (int i = 0; i < data.Length; i++)
-    {
-      sBuilder.Append(data[i].ToString("x2"));
-    }
-    return sBuilder.ToString();
+    var destination = Path.Join(_options.Output!, memoryDigest! + ".tar");
+    var fileStream = new FileStream(destination!, FileMode.Create, FileAccess.Write);
+    memoryStream.WriteTo(fileStream);
+    fileStream.Close();
+
+    var file = File.OpenRead(destination!);
+    var fileDigest = _digestService.GetDigest(file);
+    file.Close();
+
+    var newDestination = Path.Join(_options.Output!, fileDigest! + ".tar");
+
+    System.IO.File.Move(destination, newDestination);
+
+    _logger.LogInformation("Layer Digest: {LayerDigest}", "sha256:" + memoryDigest);
+    _logger.LogInformation("From File Digest {FileDigest}", "sha256:" + fileDigest);
+    
   }
 }
 
