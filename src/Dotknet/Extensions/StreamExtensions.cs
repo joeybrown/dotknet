@@ -1,11 +1,12 @@
 using System.Security.Cryptography;
 using System.Text;
+using Dotknet.Models;
 
 namespace Dotknet.Extensions;
 
 public static class StreamExtensions {
 
-  public static string GetDigest(this Stream stream)
+  public static Hash GetHash(this Stream stream)
   {
     using var hashAlgorithm = SHA256.Create();
     stream.Seek(0, SeekOrigin.Begin);
@@ -15,6 +16,10 @@ public static class StreamExtensions {
     {
       sBuilder.Append(data[i].ToString("x2"));
     }
-    return sBuilder.ToString();
+    
+    return new Hash {
+      Hex = sBuilder.ToString(),
+      Algorithm = "sha256"
+    };
   }
 }

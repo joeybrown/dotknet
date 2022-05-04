@@ -3,8 +3,16 @@ using SharpCompress.Archives.Tar;
 using SharpCompress.Writers;
 using Microsoft.Extensions.Logging;
 using Dotknet.Extensions;
+using Dotknet.Models;
 
 namespace Dotknet.Commands;
+
+public class ArchiveCommandOptions
+{
+  public string? Output { get; set; }
+  public string? SourceDirectory { get; set; }
+  public string LayerRoot => "dotknet-app";
+}
 
 public interface IArchiveCommand
 {
@@ -15,30 +23,38 @@ public interface IArchiveCommand
 /// https://github.com/dotnet/runtime/issues/65951
 public class ArchiveCommand : IArchiveCommand
 {
-  private readonly LifecycleOptions _options;
+  private readonly ArchiveCommandOptions _options;
   private readonly ILogger<ArchiveCommand> _logger;
-  private readonly WriterOptions _tarWriterOptions;
+  private readonly WriterOptions _uncompressed;
+  private readonly WriterOptions _compressed;
 
-  public ArchiveCommand(IOptions<LifecycleOptions> options, ILogger<ArchiveCommand> logger)
+  public ArchiveCommand(IOptions<ArchiveCommandOptions> options, ILogger<ArchiveCommand> logger)
   {
     _options = options.Value;
     _logger = logger;
-    _tarWriterOptions = new SharpCompress.Writers.WriterOptions(SharpCompress.Common.CompressionType.None);
+    _uncompressed = new SharpCompress.Writers.WriterOptions(SharpCompress.Common.CompressionType.None);
+    _compressed = new SharpCompress.Writers.WriterOptions(SharpCompress.Common.CompressionType.GZip);
   }
 
   public void Execute()
   {
     using var tarArchive = TarArchive.Create();
-    using var memoryStream = new MemoryStream();
-    tarArchive.AddAllFromDirectory(_options.DirectoryToArchive!, _options.LayerAppRoot);
-    
-    tarArchive.SaveTo(memoryStream, _tarWriterOptions);
-    var digest = memoryStream.GetDigest();
-    var destination = Path.Join(_options.Output!, digest! + ".tar");
-    
-    using var fileStream = new FileStream(destination!, FileMode.Create, FileAccess.Write);
-    memoryStream.WriteTo(fileStream);
+    tarArchive.AddAllFromDirectory(_options.SourceDirectory!, _options.LayerRoot);
 
-    _logger.LogInformation("Layer Digest: {LayerDigest}", "sha256:" + digest);
+    using var layer = new TarArchiveLayer(tarArchive);
+
+    var uncompressedDestination = Path.Join(_options.Output!, layer.DiffId().Hex! + ".tar");
+    using var uncompressedFileStream = new FileStream(uncompressedDestination!, FileMode.Create, FileAccess.Write);
+    using var uncompressedStream = layer.Uncompressed();
+    uncompressedStream.Seek(0, SeekOrigin.Begin);
+    uncompressedStream.CopyTo(uncompressedFileStream);
+
+    var compressedDestination = Path.Join(_options.Output!, layer.Digest().Hex! + ".tar.gz");
+    using var compressedFileStream = new FileStream(compressedDestination!, FileMode.Create, FileAccess.Write);
+    using var compressedStream = layer.Compressed();
+    compressedStream.Seek(0, SeekOrigin.Begin);
+    compressedStream.CopyTo(compressedFileStream);
+
+    _logger.LogInformation("DiffId: {DiffId} Digest: {Digest}", layer.DiffId().Hex.Substring(0,6), layer.Digest().Hex.Substring(0,6));
   }
 }

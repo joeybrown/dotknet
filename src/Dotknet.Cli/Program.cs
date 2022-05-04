@@ -34,9 +34,12 @@ class Program
 
         host.ConfigureServices(services =>
         {
-          services.AddOptions<LifecycleOptions>().BindCommandLine();
+          services.AddOptions<ArchiveCommandOptions>().BindCommandLine();
+          services.AddOptions<PublishCommandOptions>().BindCommandLine();
+          services.AddOptions<UploadLayerCommandOptions>().BindCommandLine();
           services.AddSingleton<IPublishCommand, PublishCommand>();
           services.AddSingleton<IArchiveCommand, ArchiveCommand>();
+          services.AddSingleton<IUploadLayerCommand, UploadLayerCommand>();
         });
       })
       .UseDefaults()
@@ -48,6 +51,7 @@ class Program
     var root = new RootCommand();
     root.Add(Publish);
     root.Add(Archive);
+    root.Add(Upload);
     return new CommandLineBuilder(root);
   }
 
@@ -74,7 +78,7 @@ class Program
     get
     {
       var command = new Command("archive");
-      command.AddOption(new Option<string>("--directoryToArchive")
+      command.AddOption(new Option<string>("--sourceDirectory")
       {
         IsRequired = true,
       });
@@ -83,6 +87,24 @@ class Program
         IsRequired = true,
       });
       command.Handler = CommandHandler.Create<IHost>(host => host.Services.GetRequiredService<IArchiveCommand>().Execute());
+      return command;
+    }
+  }
+
+    private static Command Upload
+  {
+    get
+    {
+      var command = new Command("upload");
+      command.AddOption(new Option<string>("--layer")
+      {
+        IsRequired = true,
+      });
+      command.AddOption(new Option<string>("--registryPath")
+      {
+        IsRequired = true,
+      });
+      command.Handler = CommandHandler.Create<IHost>(host => host.Services.GetRequiredService<IUploadLayerCommand>().Execute());
       return command;
     }
   }

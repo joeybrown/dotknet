@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Docker.DotNet" Version="3.125.5" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
     <PackageReference Include="Nuke.Common" Version="6.0.1" /> 
     <PackageReference Include="SharpCompress" Version="0.31.0" />

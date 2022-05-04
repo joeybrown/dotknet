@@ -26,10 +26,27 @@
       "program": "${workspaceFolder}/src/Dotknet.Cli/bin/Debug/net6.0/Dotknet.Cli.dll",
       "args": [
         "archive",
-        "--directoryToArchive",
+        "--sourceDirectory",
         "${workspaceFolder}/output",
         "--output",
         "${workspaceFolder}/output"
+      ],
+      "cwd": "${workspaceFolder}/src/Dotknet.Cli",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Upload",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/Dotknet.Cli/bin/Debug/net6.0/Dotknet.Cli.dll",
+      "args": [
+        "upload",
+        "--layer",
+        "${workspaceFolder}/output/4bee7b7bc98516643386e3b804fab9f2d3769bd1b199c1cafe64eba0850a893e.tar",
+        "--registryPath",
+        "localhost:5000/demo/foo"
       ],
       "cwd": "${workspaceFolder}/src/Dotknet.Cli",
       "console": "internalConsole",
