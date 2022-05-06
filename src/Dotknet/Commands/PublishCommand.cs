@@ -41,8 +41,8 @@ public class PublishCommand : IPublishCommand
 
     using var tarArchive = TarArchive.Create();
     tarArchive.AddAllFromDirectory(_options.Output!, "dotknet-app");
-
     using var layer = new TarArchiveLayer(tarArchive);
-    _logger.LogInformation("Layer Created: {Layer}", layer);
+
+    _logger.LogInformation("Output will create layer {Layer}", layer);
   }
 }
