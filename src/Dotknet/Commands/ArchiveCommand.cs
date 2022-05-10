@@ -4,6 +4,8 @@ using SharpCompress.Writers;
 using Microsoft.Extensions.Logging;
 using Dotknet.Extensions;
 using Dotknet.Models;
+using System.Threading.Tasks;
+using System.IO;
 
 namespace Dotknet.Commands;
 
@@ -16,7 +18,7 @@ public class ArchiveCommandOptions
 
 public interface IArchiveCommand
 {
-  void Execute();
+  Task Execute();
 }
 
 /// It would be cool if dotnet had native APIs for this.
@@ -36,7 +38,7 @@ public class ArchiveCommand : IArchiveCommand
     _compressed = new SharpCompress.Writers.WriterOptions(SharpCompress.Common.CompressionType.GZip);
   }
 
-  public void Execute()
+  public Task Execute()
   {
     using var tarArchive = TarArchive.Create();
     tarArchive.AddAllFromDirectory(_options.SourceDirectory!, _options.LayerRoot);
@@ -56,5 +58,6 @@ public class ArchiveCommand : IArchiveCommand
     compressedStream.CopyTo(compressedFileStream);
 
     _logger.LogInformation("DiffId: {DiffId} Digest: {Digest}", layer.DiffId().Hex.Substring(0,6), layer.Digest().Hex.Substring(0,6));
+    return Task.CompletedTask;
   }
 }

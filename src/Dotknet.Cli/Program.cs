@@ -68,7 +68,7 @@ class Program
       {
         IsRequired = true,
       });
-      command.Handler = CommandHandler.Create<IHost>(host => host.Services.GetRequiredService<IPublishCommand>().Execute());
+      command.Handler = CommandHandler.Create<IHost>(async host => await host.Services.GetRequiredService<IPublishCommand>().Execute());
       return command;
     }
   }
@@ -86,7 +86,7 @@ class Program
       {
         IsRequired = true,
       });
-      command.Handler = CommandHandler.Create<IHost>(host => host.Services.GetRequiredService<IArchiveCommand>().Execute());
+      command.Handler = CommandHandler.Create<IHost>(async host => await host.Services.GetRequiredService<IArchiveCommand>().Execute());
       return command;
     }
   }
@@ -104,7 +104,7 @@ class Program
       {
         IsRequired = true,
       });
-      command.Handler = CommandHandler.Create<IHost>(host => host.Services.GetRequiredService<IUploadLayerCommand>().Execute());
+      command.Handler = CommandHandler.Create<IHost>(async host => await host.Services.GetRequiredService<IUploadLayerCommand>().Execute());
       return command;
     }
   }

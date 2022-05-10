@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Dotknet.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -14,7 +15,7 @@ public class PublishCommandOptions
 
 public interface IPublishCommand
 {
-  void Execute();
+  Task Execute();
 }
 
 public class PublishCommand : IPublishCommand
@@ -33,7 +34,7 @@ public class PublishCommand : IPublishCommand
     return _options.Output!;
   }
 
-  public void Execute()
+  public Task Execute()
   {
     DotNetTasks.DotNetPublish(settings => settings
         .SetProject(_options.Project)
@@ -44,5 +45,6 @@ public class PublishCommand : IPublishCommand
     using var layer = new TarArchiveLayer(tarArchive);
 
     _logger.LogInformation("Output will create layer {Layer}", layer);
+    return Task.CompletedTask;
   }
 }

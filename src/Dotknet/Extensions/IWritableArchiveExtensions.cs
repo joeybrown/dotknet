@@ -1,8 +1,10 @@
+using System;
+using System.IO;
 using SharpCompress.Archives;
 
 public static class IWritableArchiveExtensions
 {
-  // timestamp necessary for reproducability
+  // timestamp necessary for reproducibility
   public static void AddAllFromDirectory(this IWritableArchive writableArchive, string filePath, string rootDir, string searchPattern = "*.*", SearchOption searchOption = SearchOption.AllDirectories, DateTime? timestamp = null)
   {
     if (!timestamp.HasValue) {
