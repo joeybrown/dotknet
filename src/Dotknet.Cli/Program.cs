@@ -10,7 +10,10 @@ using System.CommandLine.Hosting;
 using System.CommandLine.Parsing;
 using Serilog;
 using Serilog.Events;
-using Dotknet.Commands;
+using Dotknet.Services;
+using Dotknet.Cli.Options;
+using Microsoft.Extensions.Options;
+using Dotknet.Clients;
 
 class Program
 {
@@ -34,12 +37,11 @@ class Program
 
         host.ConfigureServices(services =>
         {
-          services.AddOptions<ArchiveCommandOptions>().BindCommandLine();
           services.AddOptions<PublishCommandOptions>().BindCommandLine();
-          services.AddOptions<UploadLayerCommandOptions>().BindCommandLine();
-          services.AddSingleton<IPublishCommand, PublishCommand>();
-          services.AddSingleton<IArchiveCommand, ArchiveCommand>();
-          services.AddSingleton<IUploadLayerCommand, UploadLayerCommand>();
+          services.AddSingleton<IPublishService, PublishService>();
+          services.AddSingleton<IDotnetPublishService, DotnetPublishService>();
+          services.AddSingleton<IArchiveService, ArchiveService>();
+          services.AddSingleton<IRegistryClient, RegistryClient>();
         });
       })
       .UseDefaults()
@@ -50,8 +52,6 @@ class Program
   {
     var root = new RootCommand();
     root.Add(Publish);
-    root.Add(Archive);
-    root.Add(Upload);
     return new CommandLineBuilder(root);
   }
 
@@ -68,43 +68,14 @@ class Program
       {
         IsRequired = true,
       });
-      command.Handler = CommandHandler.Create<IHost>(async host => await host.Services.GetRequiredService<IPublishCommand>().Execute());
-      return command;
-    }
-  }
-
-  private static Command Archive
-  {
-    get
-    {
-      var command = new Command("archive");
-      command.AddOption(new Option<string>("--sourceDirectory")
+      command.AddOption(new Option<string>("--baseImage")
       {
         IsRequired = true,
       });
-      command.AddOption(new Option<string>("--output")
-      {
-        IsRequired = true,
+      command.Handler = CommandHandler.Create<IHost>(async host => {
+        var options = host.Services.GetRequiredService<IOptions<PublishCommandOptions>>().Value;
+        await host.Services.GetRequiredService<IPublishService>().Execute(options.Project!, options.Output!, options.BaseImage!);
       });
-      command.Handler = CommandHandler.Create<IHost>(async host => await host.Services.GetRequiredService<IArchiveCommand>().Execute());
-      return command;
-    }
-  }
-
-    private static Command Upload
-  {
-    get
-    {
-      var command = new Command("upload");
-      command.AddOption(new Option<string>("--layer")
-      {
-        IsRequired = true,
-      });
-      command.AddOption(new Option<string>("--registryPath")
-      {
-        IsRequired = true,
-      });
-      command.Handler = CommandHandler.Create<IHost>(async host => await host.Services.GetRequiredService<IUploadLayerCommand>().Execute());
       return command;
     }
   }

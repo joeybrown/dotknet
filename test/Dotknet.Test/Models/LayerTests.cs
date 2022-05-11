@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
-using Dotknet.Models;
+using Dotknet.Models.Tarball;
 using FluentAssertions;
 using SharpCompress.Archives.Tar;
 using Xunit;
@@ -18,7 +18,7 @@ public class LayerTests
     using var text = GenerateStreamFromString("foo foo foo foo foo foo foo");
     archive.AddEntry("bar", text, text.Length, timestamp);
     archive.AddEntry("baz", text, text.Length, timestamp);
-    using var layer = new TarArchiveLayer(archive);
+    using var layer = new TarballLayer(archive);
     using var compressed = layer.Compressed();
     compressed.Seek(0, SeekOrigin.Begin);
     using var ms2 = new MemoryStream();
