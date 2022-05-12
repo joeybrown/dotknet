@@ -14,7 +14,7 @@
         "--output",
         "${workspaceFolder}/output",
         "--baseImage",
-        "mcr.microsoft.com/mcr/hello-world"
+        "http://localhost:5000/dotnet/runtime"
       ],
       "cwd": "${workspaceFolder}/src/Dotknet.Cli",
       "console": "internalConsole",
