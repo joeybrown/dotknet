@@ -14,7 +14,7 @@
         "--output",
         "${workspaceFolder}/output",
         "--baseImage",
-        "http://localhost:5000/dotnet/runtime"
+        "busybox"
       ],
       "cwd": "${workspaceFolder}/src/Dotknet.Cli",
       "console": "internalConsole",

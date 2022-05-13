@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Dotknet.Extensions;
+using Dotknet.RegistryClient;
 using SharpCompress.Archives.Tar;
 
 namespace Dotknet.Models.Tarball;
@@ -52,7 +53,7 @@ public class TarballLayer : ILayer
 
   public MediaType MediaType()
   {
-    return Dotknet.Models.MediaType.DockerManifestSchema2;
+    return Dotknet.RegistryClient.MediaType.DockerManifestSchema2;
   }
 
   public long Size()

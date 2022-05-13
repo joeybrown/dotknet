@@ -22,7 +22,10 @@ public class DotnetPublishService : IDotnetPublishService
   public Task<DirectoryInfo> Execute(string project, string output)
   {
     var outputDirectory = new DirectoryInfo(output);
-    outputDirectory.Delete(true);
+    if (outputDirectory.Exists)
+    {
+      outputDirectory.Delete(true);
+    }
 
     var projectDirectory = new DirectoryInfo(project);
 

@@ -8,6 +8,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Docker.DotNet\src\Docker.DotNet\Docker.DotNet.csproj" />
     <ProjectReference Include="..\..\..\Docker.Registry.DotNet\src\Docker.Registry.DotNet\Docker.Registry.DotNet.csproj" />
+    <ProjectReference Include="..\Dotknet.RegistryClient\Dotknet.RegistryClient.csproj" />
   </ItemGroup>
 
   <ItemGroup>

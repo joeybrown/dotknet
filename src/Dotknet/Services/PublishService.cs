@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
-using Dotknet.Clients;
 using Dotknet.Models;
+using Dotknet.RegistryClient;
 using Microsoft.Extensions.Logging;
 
 namespace Dotknet.Services;
@@ -14,21 +14,22 @@ public class PublishService : IPublishService
 {
   private readonly ILogger<PublishService> _logger;
   private readonly IDotnetPublishService _dotnetPublishService;
-  private readonly IRegistryClient _registryClient;
+  private readonly IRegistryClientFactory _registryClientFactory;
   private readonly IArchiveService _archiveService;
 
-  public PublishService(ILogger<PublishService> logger, IDotnetPublishService dotnetPublishService, IRegistryClient registryClient, IArchiveService archiveService)
+  public PublishService(ILogger<PublishService> logger, IDotnetPublishService dotnetPublishService, IRegistryClientFactory registryClientFactory, IArchiveService archiveService)
   {
     _logger = logger;
     _dotnetPublishService = dotnetPublishService;
-    _registryClient = registryClient;
+    _registryClientFactory = registryClientFactory;
     _archiveService = archiveService;
   }
 
   public async Task Execute(string project, string output, string baseImage, string layerRoot = "dotnet-app")
   {
+    var registryClient = _registryClientFactory.Create();
     var appLayerTask = BuildLayer(project, output, layerRoot);
-    var baseImageManifestTask = _registryClient.GetManifest(baseImage);
+    var baseImageManifestTask = registryClient.ManifestOperations.GetManifest(baseImage);
     await Task.WhenAll(appLayerTask, baseImageManifestTask);
   }
 

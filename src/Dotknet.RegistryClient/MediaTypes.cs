@@ -1,7 +1,7 @@
 
 using System.ComponentModel;
 
-namespace Dotknet.Models;
+namespace Dotknet.RegistryClient;
 
 /// ref: https://github.com/google/go-containerregistry/blob/main/pkg/v1/types/types.go
 // MediaType is an enumeration of the supported mime types that an element of an image might have.
@@ -69,6 +69,17 @@ public enum MediaType
 
 public static class MediaTypeExtensions
 {
+
+  public static string Description(this MediaType source)
+  {
+    var fi = source.GetType().GetField(source.ToString());
+
+    DescriptionAttribute[] attributes = (DescriptionAttribute[])fi!.GetCustomAttributes(
+        typeof(DescriptionAttribute), false);
+
+    if (attributes != null && attributes.Length > 0) return attributes[0].Description;
+    else return source.ToString();
+  }
 
   // IsDistributable returns true if a layer is distributable, see:
   // https://github.com/opencontainers/image-spec/blob/master/layer.md#non-distributable-layers
