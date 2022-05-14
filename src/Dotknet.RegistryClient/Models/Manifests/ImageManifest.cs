@@ -9,20 +9,31 @@ public interface IImageManifest
 
 public abstract class ImageManifest
 {
-  public static IImageManifest FromContent(string manifest)
+  public static IImageManifest FromContent(string content)
   {
-    var mediaType = GetMediaType(manifest);
-    switch (mediaType)
-    {
-      case MediaType.DockerManifestSchema2:
-        return ImageManifestDocker2_2.FromContent(manifest);
-      default:
-        throw new NotImplementedException($"Image media type not implemented");
+    if (IsImageManifestList(content, out var manifest)) {
+      return manifest;
     }
+    throw new NotImplementedException($"Image media type not implemented");
   }
 
-  private static MediaType GetMediaType(string manifest)
+  private static bool IsImageManifestList(string content, out IImageManifest? manifest){
+    Func<string, IImageManifest> parse = c => ImageManifestList.FromContent(c);
+    Func<IImageManifest, bool> test = m => ((ImageManifestList) m).MediaType!.Equals(MediaType.DockerManifestList.Description());
+    return TryParseManifest(content, parse, test, out manifest);
+  }
+
+  private static bool TryParseManifest(string content, Func<string, IImageManifest> parseManifest, Func<IImageManifest, bool> test, out IImageManifest? manifest)
   {
-    return MediaType.DockerManifestSchema2;
+    try
+    {
+      manifest = parseManifest(content);
+    }
+    catch
+    {
+      manifest = null;
+      return false;
+    }
+    return test(manifest);
   }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -24,18 +25,18 @@ public class ManifestOperations : IManifestOperations
 
   public async Task<IImageManifest> GetManifest(string image)
   {
-    if (!image.Contains("://"))
+    var isDockerHubImage = !image.Contains("://");
+    if (isDockerHubImage)
     {
       return await GetManifestFromDockerHub(image);
     }
-    await _httpClient.GetAsync(image);
     throw new System.NotImplementedException();
   }
 
   private class DockerHubAuth
   {
     [JsonPropertyName("access_token")]
-    public string AccessToken { get; set; }
+    public string? AccessToken { get; set; }
   }
 
   public async Task<string> GetDockerHubAuthToken(string image)
@@ -45,7 +46,7 @@ public class ManifestOperations : IManifestOperations
     response.EnsureSuccessStatusCode();
     var content = await response.Content.ReadAsStreamAsync();
     var dockerHubAuth = await JsonSerializer.DeserializeAsync<DockerHubAuth>(content);
-    return dockerHubAuth!.AccessToken;
+    return dockerHubAuth!.AccessToken!;
   }
 
   public async Task<IImageManifest> GetManifestFromDockerHub(string image)
@@ -58,9 +59,16 @@ public class ManifestOperations : IManifestOperations
       RequestUri = endpoint
     };
     requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-    requestMessage.Headers.Add("Accept", $"{MediaType.OCIImageIndex.Description()}, {MediaType.DockerManifestList.Description()}, {MediaType.OCIManifestSchema1.Description()}, {MediaType.DockerManifestSchema1.Description()}, {MediaType.DockerManifestSchema1Signed.Description()}, {MediaType.DockerManifestSchema2.Description()}");
+    requestMessage.Headers.Add("Accept", new[] {
+      MediaType.OCIImageIndex,
+      MediaType.DockerManifestList,
+      MediaType.OCIManifestSchema1,
+      MediaType.DockerManifestSchema1,
+      MediaType.DockerManifestSchema1Signed,
+      MediaType.DockerManifestSchema2
+    }.Select(x => x.Description()));
     var response = await _httpClient.SendAsync(requestMessage);
     var content = await response.Content.ReadAsStringAsync();
-    throw new Exception("hello");
+    return ImageManifest.FromContent(content);
   }
 }
