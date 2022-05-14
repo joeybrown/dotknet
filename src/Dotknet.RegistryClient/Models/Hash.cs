@@ -5,9 +5,23 @@ using System.Text.Json.Serialization;
 namespace Dotknet.RegistryClient.Models;
 
 /// ref: https://github.com/google/go-containerregistry/blob/main/pkg/v1/hash.go
-[JsonConverter(typeof(HashConverter))] 
+[JsonConverter(typeof(HashConverter))]
 public class Hash
 {
+  public static Hash? FromString(string? hash)
+  {
+    if (string.IsNullOrWhiteSpace(hash))
+    {
+      return null;
+    }
+    var parts = hash.Split(":");
+    return new Hash
+    {
+      Algorithm = parts[0],
+      Hex = parts[1]
+    };
+  }
+
   // Algorithm holds the algorithm used to compute the hash.
   public string? Algorithm { get; set; }
 
@@ -25,14 +39,7 @@ public class HashConverter : JsonConverter<Hash>
   public override Hash? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
   {
     var hash = reader.GetString();
-    if (string.IsNullOrWhiteSpace(hash)){
-      return null;
-    }
-    var parts = hash.Split(":");
-    return new Hash{
-      Algorithm = parts[0],
-      Hex = parts[1]
-    };
+    return Hash.FromString(hash);
   }
 
   public override void Write(Utf8JsonWriter writer, Hash value, JsonSerializerOptions options)

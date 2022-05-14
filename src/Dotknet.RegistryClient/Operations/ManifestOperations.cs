@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -12,7 +13,10 @@ namespace Dotknet.RegistryClient.Operations;
 
 public interface IManifestOperations
 {
+  // todo: We need a new type that is ManifestResponse because the response
+  // could be a single manifest, or an index and we handle these differently
   Task<IImageManifest> GetManifest(string image);
+  Task<IEnumerable<IImageManifest>> GetManifests(IImageManifest manifestList);
 }
 
 public class ManifestOperations : IManifestOperations

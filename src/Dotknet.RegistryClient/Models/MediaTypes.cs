@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 using Ardalis.SmartEnum;
 using Ardalis.SmartEnum.SystemTextJson;
@@ -6,120 +7,166 @@ using Ardalis.SmartEnum.SystemTextJson;
 namespace Dotknet.RegistryClient.Models;
 
 [JsonConverter(typeof(SmartEnumNameConverter<MediaTypeEnum, int>))]
-public sealed class MediaTypeEnum : SmartEnum<MediaTypeEnum>
+public abstract class MediaTypeEnum : SmartEnum<MediaTypeEnum>
 {
-  public static readonly MediaTypeEnum OCIContentDescriptor = new MediaTypeEnum("application/vnd.oci.descriptor.v1+json", 1);
-  public static readonly MediaTypeEnum OCIImageIndex = new MediaTypeEnum("application/vnd.oci.image.index.v1+json", 2);
-  public static readonly MediaTypeEnum OCIManifestSchema1 = new MediaTypeEnum("application/vnd.oci.image.manifest.v1+json", 3);
-  public static readonly MediaTypeEnum OCIConfigJSON = new MediaTypeEnum("application/vnd.oci.image.config.v1+json", 4);
-  public static readonly MediaTypeEnum OCILayer = new MediaTypeEnum("application/vnd.oci.image.layer.v1.tar+gzip", 5);
-  public static readonly MediaTypeEnum OCIRestrictedLayer = new MediaTypeEnum("application/vnd.oci.image.layer.nondistributable.v1.tar+gzip", 6);
-  public static readonly MediaTypeEnum OCIUncompressedLayer = new MediaTypeEnum("application/vnd.oci.image.layer.v1.tar", 7);
-  public static readonly MediaTypeEnum OCIUncompressedRestrictedLayer = new MediaTypeEnum("application/vnd.oci.image.layer.nondistributable.v1.tar", 8);
-  public static readonly MediaTypeEnum DockerManifestSchema1 = new MediaTypeEnum("application/vnd.docker.distribution.manifest.v1+json", 9);
-  public static readonly MediaTypeEnum DockerManifestSchema1Signed = new MediaTypeEnum("application/vnd.docker.distribution.manifest.v1+prettyjws", 10);
-  public static readonly MediaTypeEnum DockerManifestSchema2 = new MediaTypeEnum("application/vnd.docker.distribution.manifest.v2+json", 11);
-  public static readonly MediaTypeEnum DockerManifestList = new MediaTypeEnum("application/vnd.docker.distribution.manifest.list.v2+json", 12);
-  public static readonly MediaTypeEnum DockerLayer = new MediaTypeEnum("application/vnd.docker.image.rootfs.diff.tar.gzip", 13);
-  public static readonly MediaTypeEnum DockerConfigJSON = new MediaTypeEnum("application/vnd.docker.container.image.v1+json", 14);
-  public static readonly MediaTypeEnum DockerPluginConfig = new MediaTypeEnum("application/vnd.docker.plugin.v1+json", 15);
-  public static readonly MediaTypeEnum DockerForeignLayer = new MediaTypeEnum("application/vnd.docker.image.rootfs.foreign.diff.tar.gzip", 16);
-  public static readonly MediaTypeEnum DockerUncompressedLayer = new MediaTypeEnum("application/vnd.docker.image.rootfs.diff.tar", 17);
-  public static readonly MediaTypeEnum OCIVendorPrefix = new MediaTypeEnum("vnd.oci", 18);
-  public static readonly MediaTypeEnum DockerVendorPrefix = new MediaTypeEnum("vnd.docker", 19);
+  public static readonly MediaTypeEnum OCIContentDescriptor = new OCIContentDescriptorType();
+  public static readonly MediaTypeEnum OCIImageIndex = new OCIImageIndexType();
+  public static readonly MediaTypeEnum OCIConfigJSON = new OCIConfigJSONType();
+  public static readonly MediaTypeEnum OCILayer = new OCILayerType();
+  public static readonly MediaTypeEnum OCIRestrictedLayer = new OCIRestrictedLayerType();
+  public static readonly MediaTypeEnum OCIUncompressedLayer = new OCIUncompressedLayerType();
+  public static readonly MediaTypeEnum OCIUncompressedRestrictedLayer = new OCIUncompressedRestrictedLayerType();
+  public static readonly MediaTypeEnum DockerManifestSchema1 = new DockerManifestSchema1Type();
+  public static readonly MediaTypeEnum DockerManifestSchema1Signed = new DockerManifestSchema1SignedType();
+  public static readonly MediaTypeEnum DockerManifestSchema2 = new DockerManifestSchema2Type();
+  public static readonly MediaTypeEnum DockerManifestList = new DockerManifestListType();
+  public static readonly MediaTypeEnum DockerLayer = new DockerLayerType();
+  public static readonly MediaTypeEnum DockerConfigJSON = new DockerConfigJSONType();
+  public static readonly MediaTypeEnum DockerPluginConfig = new DockerPluginConfigType();
+  public static readonly MediaTypeEnum DockerForeignLayer = new DockerForeignLayerType();
+  public static readonly MediaTypeEnum DockerUncompressedLayer = new DockerUncompressedLayerType();
+  public static readonly MediaTypeEnum OCIVendorPrefix = new OCIVendorPrefixType();
+  public static readonly MediaTypeEnum DockerVendorPrefix = new DockerVendorPrefixType();
 
   private MediaTypeEnum(string name, int value) : base(name, value)
   {
   }
 
-  public static IEnumerable<MediaTypeEnum> Manifests => new[] {
-    MediaTypeEnum.OCIImageIndex,
-    MediaTypeEnum.DockerManifestList,
-    MediaTypeEnum.OCIManifestSchema1,
-    MediaTypeEnum.DockerManifestSchema1,
-    MediaTypeEnum.DockerManifestSchema1Signed,
-    MediaTypeEnum.DockerManifestSchema2
-  };
+  public abstract bool IsManifest { get; }
+  public abstract bool IsImageIndex { get; }
+
+  private class OCIContentDescriptorType : MediaTypeEnum
+  {
+    public OCIContentDescriptorType() : base("application/vnd.oci.descriptor.v1+json", 1) { }
+    public override bool IsManifest => false;
+    public override bool IsImageIndex => false;
+  }
+
+  private class OCIImageIndexType : MediaTypeEnum
+  {
+    public OCIImageIndexType() : base("application/vnd.oci.image.index.v1+json", 2) { }
+    public override bool IsManifest => false;
+    public override bool IsImageIndex => true;
+  }
+
+  private class OCIConfigJSONType : MediaTypeEnum
+  {
+    public OCIConfigJSONType() : base("application/vnd.oci.image.config.v1+json", 4) { }
+    public override bool IsManifest => false;
+    public override bool IsImageIndex => false;
+  }
+
+  private class OCILayerType : MediaTypeEnum
+  {
+    public OCILayerType() : base("application/vnd.oci.image.layer.v1.tar+gzip", 5) { }
+    public override bool IsManifest => false;
+    public override bool IsImageIndex => false;
+  }
+
+  private class OCIRestrictedLayerType : MediaTypeEnum
+  {
+    public OCIRestrictedLayerType() : base("application/vnd.oci.image.layer.nondistributable.v1.tar+gzip", 6) { }
+    public override bool IsManifest => false;
+    public override bool IsImageIndex => false;
+  }
+
+  private class OCIUncompressedLayerType : MediaTypeEnum
+  {
+    public OCIUncompressedLayerType() : base("application/vnd.oci.image.layer.v1.tar", 7) { }
+    public override bool IsManifest => false;
+    public override bool IsImageIndex => false;
+  }
+
+  private class OCIUncompressedRestrictedLayerType : MediaTypeEnum
+  {
+    public OCIUncompressedRestrictedLayerType() : base("application/vnd.oci.image.layer.nondistributable.v1.tar", 8) { }
+    public override bool IsManifest => false;
+    public override bool IsImageIndex => false;
+  }
+
+  private class DockerManifestSchema1Type : MediaTypeEnum
+  {
+    public DockerManifestSchema1Type() : base("application/vnd.docker.distribution.manifest.v1+json", 9) { }
+    public override bool IsManifest => true;
+    public override bool IsImageIndex => false;
+  }
+
+  private class DockerManifestSchema1SignedType : MediaTypeEnum
+  {
+    public DockerManifestSchema1SignedType() : base("application/vnd.docker.distribution.manifest.v1+prettyjws", 10) { }
+    public override bool IsManifest => true;
+    public override bool IsImageIndex => false;
+  }
+
+  private class DockerManifestSchema2Type : MediaTypeEnum
+  {
+    public DockerManifestSchema2Type() : base("application/vnd.docker.distribution.manifest.v2+json", 11) { }
+    public override bool IsManifest => true;
+    public override bool IsImageIndex => false;
+  }
+
+  private class DockerManifestListType : MediaTypeEnum
+  {
+    public DockerManifestListType() : base("application/vnd.docker.distribution.manifest.list.v2+json", 12) { }
+    public override bool IsManifest => false;
+    public override bool IsImageIndex => true;
+  }
+
+  private class DockerLayerType : MediaTypeEnum
+  {
+    public DockerLayerType() : base("application/vnd.docker.image.rootfs.diff.tar.gzip", 13) { }
+    public override bool IsManifest => false;
+    public override bool IsImageIndex => false;
+  }
+
+  private class DockerConfigJSONType : MediaTypeEnum
+  {
+    public DockerConfigJSONType() : base("application/vnd.docker.container.image.v1+json", 14) { }
+    public override bool IsManifest => false;
+    public override bool IsImageIndex => false;
+  }
+
+  private class DockerPluginConfigType : MediaTypeEnum
+  {
+    public DockerPluginConfigType() : base("application/vnd.docker.plugin.v1+json", 15) { }
+    public override bool IsManifest => false;
+    public override bool IsImageIndex => false;
+  }
+
+  private class DockerForeignLayerType : MediaTypeEnum
+  {
+    public DockerForeignLayerType() : base("application/vnd.docker.image.rootfs.foreign.diff.tar.gzip", 16) { }
+    public override bool IsManifest => false;
+    public override bool IsImageIndex => false;
+  }
+
+  private class DockerUncompressedLayerType : MediaTypeEnum
+  {
+    public DockerUncompressedLayerType() : base("application/vnd.docker.image.rootfs.diff.tar", 17) { }
+    public override bool IsManifest => false;
+    public override bool IsImageIndex => false;
+  }
+
+  private class OCIVendorPrefixType : MediaTypeEnum
+  {
+    public OCIVendorPrefixType() : base("vnd.oci", 18) { }
+    public override bool IsManifest => false;
+    public override bool IsImageIndex => false;
+  }
+
+  private class DockerVendorPrefixType : MediaTypeEnum
+  {
+    public DockerVendorPrefixType() : base("vnd.docker", 19) { }
+    public override bool IsManifest => false;
+    public override bool IsImageIndex => false;
+  }
+
+  public static IEnumerable<MediaTypeEnum> Manifests =>
+    MediaTypeEnum.List.Where(x => x.IsManifest);
 }
-
-// ref: https://github.com/google/go-containerregistry/blob/main/pkg/v1/types/types.go
-//MediaType is an enumeration of the supported mime types that an element of an image might have.
-// public enum MediaType
-// {
-//   [Description("application/vnd.oci.descriptor.v1+json")]
-//   OCIContentDescriptor,
-
-//   [Description("application/vnd.oci.image.index.v1+json")]
-//   OCIImageIndex,
-
-//   [Description("application/vnd.oci.image.manifest.v1+json")]
-//   OCIManifestSchema1,
-
-//   [Description("application/vnd.oci.image.config.v1+json")]
-//   OCIConfigJSON,
-
-//   [Description("application/vnd.oci.image.layer.v1.tar+gzip")]
-//   OCILayer,
-
-//   [Description("application/vnd.oci.image.layer.nondistributable.v1.tar+gzip")]
-//   OCIRestrictedLayer,
-
-//   [Description("application/vnd.oci.image.layer.v1.tar")]
-//   OCIUncompressedLayer,
-
-//   [Description("application/vnd.oci.image.layer.nondistributable.v1.tar")]
-//   OCIUncompressedRestrictedLayer,
-
-
-//   [Description("application/vnd.docker.distribution.manifest.v1+json")]
-//   DockerManifestSchema1,
-
-//   [Description("application/vnd.docker.distribution.manifest.v1+prettyjws")]
-//   DockerManifestSchema1Signed,
-
-//   [Description("application/vnd.docker.distribution.manifest.v2+json")]
-//   DockerManifestSchema2,
-
-//   [Description("application/vnd.docker.distribution.manifest.list.v2+json")]
-//   DockerManifestList,
-
-//   [Description("application/vnd.docker.image.rootfs.diff.tar.gzip")]
-//   DockerLayer,
-
-//   [Description("application/vnd.docker.container.image.v1+json")]
-//   DockerConfigJSON,
-
-//   [Description("application/vnd.docker.plugin.v1+json")]
-//   DockerPluginConfig,
-
-//   [Description("application/vnd.docker.image.rootfs.foreign.diff.tar.gzip")]
-//   DockerForeignLayer,
-
-//   [Description("application/vnd.docker.image.rootfs.diff.tar")]
-//   DockerUncompressedLayer,
-
-
-//   [Description("vnd.oci")]
-//   OCIVendorPrefix,
-
-//   [Description("vnd.docker")]
-//   DockerVendorPrefix
-// }
 
 // public static class MediaTypeExtensions
 // {
-
-//   public static string Description(this MediaType source)
-//   {
-//     var fi = source.GetType().GetField(source.ToString());
-
-//     DescriptionAttribute[] attributes = (DescriptionAttribute[])fi!.GetCustomAttributes(
-//         typeof(DescriptionAttribute), false);
-
-//     if (attributes != null && attributes.Length > 0) return attributes[0].Description;
-//     else return source.ToString();
-//   }
-
 //   // IsDistributable returns true if a layer is distributable, see:
 //   // https://github.com/opencontainers/image-spec/blob/master/layer.md#non-distributable-layers
 //   public static bool IsDistributable(this MediaType mediaType)
@@ -134,7 +181,6 @@ public sealed class MediaTypeEnum : SmartEnum<MediaTypeEnum>
 //         return false;
 //     }
 //   }
-
 //   // IsImage returns true if the mediaType represents an image manifest, as opposed to something else, like an index.
 //   public static bool IsImage(this MediaType mediaType)
 //   {
@@ -147,7 +193,6 @@ public sealed class MediaTypeEnum : SmartEnum<MediaTypeEnum>
 //         return false;
 //     }
 //   }
-
 //   // IsIndex returns true if the mediaType represents an index, as opposed to something else, like an image.
 //   public static bool IsIndex(this MediaType mediaType)
 //   {

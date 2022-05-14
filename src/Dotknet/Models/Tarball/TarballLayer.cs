@@ -1,6 +1,7 @@
 using System;
 using System.IO;
-using Dotknet.RegistryClient;
+using System.Security.Cryptography;
+using System.Text;
 using Dotknet.RegistryClient.Models;
 using SharpCompress.Archives.Tar;
 
@@ -88,5 +89,25 @@ public class TarballLayer : ILayer
   public override string ToString()
   {
     return $"Layer DiffId: {DiffId().Hex!.Substring(0, 6)} Digest: {Digest().Hex!.Substring(0, 6)}";
+  }
+}
+
+public static class StreamExtensions {
+
+  public static Hash GetHash(this Stream stream)
+  {
+    using var hashAlgorithm = SHA256.Create();
+    stream.Seek(0, SeekOrigin.Begin);
+    var data = hashAlgorithm.ComputeHash(stream);
+    var sBuilder = new StringBuilder();
+    for (int i = 0; i < data.Length; i++)
+    {
+      sBuilder.Append(data[i].ToString("x2"));
+    }
+    
+    return new Hash {
+      Hex = sBuilder.ToString(),
+      Algorithm = "sha256"
+    };
   }
 }
