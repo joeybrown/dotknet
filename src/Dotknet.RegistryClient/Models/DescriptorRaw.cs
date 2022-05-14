@@ -11,7 +11,7 @@ public class DescriptorRaw
   [JsonPropertyName("size")]
   public long Size { get; set; }
   [JsonPropertyName("digest")]
-  public string Digest { get; set; }
+  public Hash Digest { get; set; }
   [JsonPropertyName("data")]
   public byte[]? Data { get; set; }
   [JsonPropertyName("urls")]

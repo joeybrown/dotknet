@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using Dotknet.RegistryClient.Models.Manifests;
 using FluentAssertions;

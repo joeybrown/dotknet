@@ -1,9 +1,8 @@
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using Dotknet.Models;
 
-namespace Dotknet.Extensions;
+namespace Dotknet.RegistryClient;
 
 public static class StreamExtensions {
 
