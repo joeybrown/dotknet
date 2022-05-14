@@ -1,6 +1,7 @@
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using Dotknet.RegistryClient.Models;
 
 namespace Dotknet.RegistryClient;
 

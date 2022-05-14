@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Dotknet.RegistryClient;
+using Dotknet.RegistryClient.Models;
 
 namespace Dotknet.Models;
 
@@ -23,5 +24,5 @@ public interface ILayer : IDisposable
   public long Size();
 
   // MediaType returns the media type of the Layer.
-  public MediaType MediaType();
+  public MediaTypeEnum MediaType();
 }

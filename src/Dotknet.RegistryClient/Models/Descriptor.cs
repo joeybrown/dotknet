@@ -4,10 +4,10 @@ using System.Text.Json.Serialization;
 namespace Dotknet.RegistryClient.Models;
 
 // Ref: https://github.com/google/go-containerregistry/blob/main/pkg/v1/manifest.go
-public class DescriptorRaw
+public class Descriptor
 {
   [JsonPropertyName("mediaType")]
-  public string MediaType { get; set; }
+  public MediaTypeEnum MediaType { get; set; }
   [JsonPropertyName("size")]
   public long Size { get; set; }
   [JsonPropertyName("digest")]
@@ -19,5 +19,5 @@ public class DescriptorRaw
   [JsonPropertyName("annotations")]
   public Dictionary<string, string>? Annotations { get; set; }
   [JsonPropertyName("platform")]
-  public PlatformRaw? Platform { get; set; }
+  public Platform? Platform { get; set; }
 }

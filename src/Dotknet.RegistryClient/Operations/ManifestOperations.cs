@@ -5,6 +5,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Dotknet.RegistryClient.Models;
 using Dotknet.RegistryClient.Models.Manifests;
 
 namespace Dotknet.RegistryClient.Operations;
@@ -59,14 +60,7 @@ public class ManifestOperations : IManifestOperations
       RequestUri = endpoint
     };
     requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-    requestMessage.Headers.Add("Accept", new[] {
-      MediaType.OCIImageIndex,
-      MediaType.DockerManifestList,
-      MediaType.OCIManifestSchema1,
-      MediaType.DockerManifestSchema1,
-      MediaType.DockerManifestSchema1Signed,
-      MediaType.DockerManifestSchema2
-    }.Select(x => x.Description()));
+    requestMessage.Headers.Add("Accept", MediaTypeEnum.Manifests.Select(x => x.Name));
     var response = await _httpClient.SendAsync(requestMessage);
     var content = await response.Content.ReadAsStringAsync();
     return ImageManifest.FromContent(content);

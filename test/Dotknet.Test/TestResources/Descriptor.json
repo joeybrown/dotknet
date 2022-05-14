@@ -1,0 +1,9 @@
+{
+  "digest": "sha256:8a44e16774f95b47fbaef3804f821574a841771d1bd3a9e1078147058eb46456",
+  "mediaType": "application\/vnd.docker.distribution.manifest.v2+json",
+  "platform": {
+    "architecture": "s390x",
+    "os": "linux"
+  },
+  "size": 528
+}

@@ -10,13 +10,13 @@ public class ImageManifestList : IImageManifest
   public int SchemaVersion {get;set;}
 
   [JsonPropertyName("mediaType")]
-  public string? MediaType {get;set;}
+  public MediaTypeEnum MediaType {get;set;}
 
   [JsonPropertyName("annotations")]
   public Dictionary<string, string>? Annotations {get;set;}
 
   [JsonPropertyName("manifests")]
-  public IEnumerable<DescriptorRaw> Manifests {get;set;}
+  public IEnumerable<Descriptor> Manifests {get;set;}
 
   public static ImageManifestList FromContent(string manifest){
     return JsonSerializer.Deserialize<ImageManifestList>(manifest)!;

@@ -19,7 +19,7 @@ public abstract class ImageManifest
 
   private static bool IsImageManifestList(string content, out IImageManifest? manifest){
     Func<string, IImageManifest> parse = c => ImageManifestList.FromContent(c);
-    Func<IImageManifest, bool> test = m => ((ImageManifestList) m).MediaType!.Equals(MediaType.DockerManifestList.Description());
+    Func<IImageManifest, bool> test = m => ((ImageManifestList) m).MediaType!.Equals(MediaTypeEnum.DockerManifestList);
     return TryParseManifest(content, parse, test, out manifest);
   }
 

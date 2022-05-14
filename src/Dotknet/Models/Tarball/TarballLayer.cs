@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Dotknet.RegistryClient;
+using Dotknet.RegistryClient.Models;
 using SharpCompress.Archives.Tar;
 
 namespace Dotknet.Models.Tarball;
@@ -50,9 +51,9 @@ public class TarballLayer : ILayer
     return stream.GetHash();
   }
 
-  public MediaType MediaType()
+  public MediaTypeEnum MediaType()
   {
-    return Dotknet.RegistryClient.MediaType.DockerManifestSchema2;
+    return MediaTypeEnum.DockerManifestSchema2;
   }
 
   public long Size()

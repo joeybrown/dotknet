@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace Dotknet.RegistryClient.Models;
 
 // Ref: https://github.com/google/go-containerregistry/blob/main/pkg/v1/platform.go
-public class PlatformRaw
+public class Platform
 {
   [JsonPropertyName("architecture")]
   public string Architecture { get; set; }

@@ -2,7 +2,7 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Dotknet.RegistryClient;
+namespace Dotknet.RegistryClient.Models;
 
 /// ref: https://github.com/google/go-containerregistry/blob/main/pkg/v1/hash.go
 [JsonConverter(typeof(HashConverter))] 
