@@ -4,8 +4,11 @@ using System.Text.Json.Serialization;
 
 namespace Dotknet.RegistryClient.Models.Manifests;
 
-public class ImageManifestList : IImageManifest
+public class DockerManifestList : IManifestIndex
 {
+  [JsonIgnore]
+  public bool IsManifestIndex => MediaType.IsManifestIndex;
+
   [JsonPropertyName("schemaVersion")]
   public int SchemaVersion {get;set;}
 
@@ -18,7 +21,6 @@ public class ImageManifestList : IImageManifest
   [JsonPropertyName("manifests")]
   public IEnumerable<Descriptor> Manifests {get;set;}
 
-  public static ImageManifestList FromContent(string manifest){
-    return JsonSerializer.Deserialize<ImageManifestList>(manifest)!;
-  }
+  public static DockerManifestList FromContent(string manifest) => 
+    JsonSerializer.Deserialize<DockerManifestList>(manifest)!;
 }

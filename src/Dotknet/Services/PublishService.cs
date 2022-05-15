@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Dotknet.Models;
 using Dotknet.RegistryClient;
+using Dotknet.RegistryClient.Models.Manifests;
 using Microsoft.Extensions.Logging;
 
 namespace Dotknet.Services;
@@ -27,10 +28,21 @@ public class PublishService : IPublishService
 
   public async Task Execute(string project, string output, string baseImage, string layerRoot = "dotnet-app")
   {
+    // var appLayerTask = BuildLayer(project, output, layerRoot);
+    var buildUpdateServiceTask = BuildImageUpdateService(baseImage);
+    // await Task.WhenAll(appLayerTask, baseImageManifestTask);
+    var service = await buildUpdateServiceTask;
+  }
+
+  private async Task<IImageUpdateService> BuildImageUpdateService(string baseImage) {
     var registryClient = _registryClientFactory.Create();
-    var appLayerTask = BuildLayer(project, output, layerRoot);
-    var baseImageManifestTask = registryClient.ManifestOperations.GetManifest(baseImage);
-    await Task.WhenAll(appLayerTask, baseImageManifestTask);
+    var manifest = await registryClient.ManifestOperations.GetManifest(baseImage);
+    if (!manifest.IsManifestIndex) {
+      return new SingleManifestImageUpdateService(baseImage, manifest);
+    }
+    var manifestIndex = (IManifestIndex) manifest;
+    var manifests = await registryClient.ManifestOperations.EnumerateManifests(baseImage, manifestIndex);
+    return new MultipleManifestImageUpdateService(baseImage, manifestIndex, manifests);
   }
 
   private async Task<ILayer> BuildLayer(string project, string output, string layerRoot)

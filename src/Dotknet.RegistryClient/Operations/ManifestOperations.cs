@@ -13,10 +13,8 @@ namespace Dotknet.RegistryClient.Operations;
 
 public interface IManifestOperations
 {
-  // todo: We need a new type that is ManifestResponse because the response
-  // could be a single manifest, or an index and we handle these differently
-  Task<IImageManifest> GetManifest(string image);
-  Task<IEnumerable<IImageManifest>> GetManifests(IImageManifest manifestList);
+  Task<IManifest> GetManifest(string image);
+  Task<IEnumerable<IManifest>> EnumerateManifests(string image, IManifestIndex manifestIndex);
 }
 
 public class ManifestOperations : IManifestOperations
@@ -28,12 +26,24 @@ public class ManifestOperations : IManifestOperations
     _httpClient = httpClient;
   }
 
-  public async Task<IImageManifest> GetManifest(string image)
+  private bool IsDockerHubImage(string image) => !image.Contains("://");
+
+  public async Task<IManifest> GetManifest(string image)
   {
-    var isDockerHubImage = !image.Contains("://");
-    if (isDockerHubImage)
+    if (IsDockerHubImage(image))
     {
-      return await GetManifestFromDockerHub(image);
+      var token = await GetDockerHubAuthToken(image);
+      return await GetManifestFromDockerHub(image, token);
+    }
+    throw new System.NotImplementedException();
+  }
+
+  public async Task<IEnumerable<IManifest>> EnumerateManifests(string image, IManifestIndex manifest)
+  {
+    if (IsDockerHubImage(image))
+    {
+      var token = await GetDockerHubAuthToken(image);
+      return await GetManifestsFromDockerHub(image, manifest.Manifests, token);
     }
     throw new System.NotImplementedException();
   }
@@ -54,10 +64,9 @@ public class ManifestOperations : IManifestOperations
     return dockerHubAuth!.AccessToken!;
   }
 
-  public async Task<IImageManifest> GetManifestFromDockerHub(string image)
+  private async Task<IManifest> GetManifestFromDockerHub(string image, string token)
   {
     var endpoint = new Uri($"https://index.docker.io/v2/library/{image}/manifests/latest");
-    var token = await GetDockerHubAuthToken(image);
     var requestMessage = new HttpRequestMessage
     {
       Method = HttpMethod.Get,
@@ -66,7 +75,31 @@ public class ManifestOperations : IManifestOperations
     requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
     requestMessage.Headers.Add("Accept", MediaTypeEnum.Manifests.Select(x => x.Name));
     var response = await _httpClient.SendAsync(requestMessage);
+    response.EnsureSuccessStatusCode();
     var content = await response.Content.ReadAsStringAsync();
-    return ImageManifest.FromContent(content);
+    var manifest = Manifest.FromContent(content);
+    return manifest;
+  }
+
+  private async Task<IEnumerable<IManifest>> GetManifestsFromDockerHub(string image, IEnumerable<Descriptor> descriptors, string token)
+  {
+    var tasks = descriptors.Select(async descriptor =>
+    {
+      var endpoint = new Uri($"https://index.docker.io/v2/library/{image}/manifests/{descriptor.Digest}");
+      var requestMessage = new HttpRequestMessage
+      {
+        Method = HttpMethod.Get,
+        RequestUri = endpoint
+      };
+      requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+      requestMessage.Headers.Add("Accept", MediaTypeEnum.Manifests.Select(x => x.Name));
+      var response = await _httpClient.SendAsync(requestMessage);
+      response.EnsureSuccessStatusCode();
+      var content = await response.Content.ReadAsStringAsync();
+      return Manifest.FromContent(content);
+    }).ToArray();
+
+    await Task.WhenAll(tasks);
+    return tasks.Select(x=>x.Result);
   }
 }
