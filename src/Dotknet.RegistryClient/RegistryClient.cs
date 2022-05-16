@@ -7,6 +7,7 @@ namespace Dotknet.RegistryClient;
 public interface IRegistryClient
 {
   IManifestOperations ManifestOperations { get; }
+  IBlobOperations BlobOperations {get;}
 }
 
 
@@ -20,8 +21,10 @@ public class RegistryClient : IRegistryClient
     _httpClient = httpClient;
     _options = options.Value;
     ManifestOperations = new ManifestOperations(httpClient);
+    BlobOperations = new BlobOperations(httpClient);
   }
 
   public IManifestOperations ManifestOperations { get; }
 
+  public IBlobOperations BlobOperations {get;}
 }

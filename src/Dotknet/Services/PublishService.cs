@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
-using Dotknet.Models;
 using Dotknet.RegistryClient;
+using Dotknet.RegistryClient.Models;
 using Dotknet.RegistryClient.Models.Manifests;
 using Microsoft.Extensions.Logging;
 
@@ -18,7 +18,11 @@ public class PublishService : IPublishService
   private readonly IRegistryClientFactory _registryClientFactory;
   private readonly IArchiveService _archiveService;
 
-  public PublishService(ILogger<PublishService> logger, IDotnetPublishService dotnetPublishService, IRegistryClientFactory registryClientFactory, IArchiveService archiveService)
+  public PublishService(
+    ILogger<PublishService> logger, 
+    IDotnetPublishService dotnetPublishService, 
+    IRegistryClientFactory registryClientFactory, 
+    IArchiveService archiveService)
   {
     _logger = logger;
     _dotnetPublishService = dotnetPublishService;
@@ -28,21 +32,27 @@ public class PublishService : IPublishService
 
   public async Task Execute(string project, string output, string baseImage, string layerRoot = "dotnet-app")
   {
-    // var appLayerTask = BuildLayer(project, output, layerRoot);
-    var buildUpdateServiceTask = BuildImageUpdateService(baseImage);
-    // await Task.WhenAll(appLayerTask, baseImageManifestTask);
-    var service = await buildUpdateServiceTask;
+    var buildLayerTask = BuildLayer(project, output, layerRoot);
+    var buildUpdateServiceTask = BuildImageUpdateService(baseImage, "http://localhost:5000/foo");
+    await Task.WhenAll(buildLayerTask, buildUpdateServiceTask);
+
+    var layer = buildLayerTask.Result;
+    var updateService = buildUpdateServiceTask.Result;
+
+    var hash = await updateService.UpdateRepositoryImage(layer);
+
+    layer.Dispose();
   }
 
-  private async Task<IImageUpdateService> BuildImageUpdateService(string baseImage) {
+  private async Task<ImageUpdateStrategy> BuildImageUpdateService(string baseImage, string destinationImage) {
     var registryClient = _registryClientFactory.Create();
     var manifest = await registryClient.ManifestOperations.GetManifest(baseImage);
     if (!manifest.IsManifestIndex) {
-      return new SingleManifestImageUpdateService(baseImage, manifest);
+      return new SingleManifestRepositoryUpdateStrategy(_registryClientFactory, destinationImage, manifest);
     }
     var manifestIndex = (IManifestIndex) manifest;
     var manifests = await registryClient.ManifestOperations.EnumerateManifests(baseImage, manifestIndex);
-    return new MultipleManifestImageUpdateService(baseImage, manifestIndex, manifests);
+    return new MultiManifestRepositoryUpdateStrategy(_registryClientFactory, destinationImage, manifestIndex, manifests);
   }
 
   private async Task<ILayer> BuildLayer(string project, string output, string layerRoot)

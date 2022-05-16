@@ -1,9 +1,7 @@
 using System;
 using System.IO;
-using Dotknet.RegistryClient;
-using Dotknet.RegistryClient.Models;
 
-namespace Dotknet.Models;
+namespace Dotknet.RegistryClient.Models;
 
 /// ref: https://github.com/google/go-containerregistry/blob/main/pkg/v1/layer.go
 public interface ILayer : IDisposable

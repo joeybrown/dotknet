@@ -3,8 +3,8 @@ using SharpCompress.Writers;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using Dotknet.Models.Tarball;
-using Dotknet.Models;
 using System.IO;
+using Dotknet.RegistryClient.Models;
 
 namespace Dotknet.Services;
 

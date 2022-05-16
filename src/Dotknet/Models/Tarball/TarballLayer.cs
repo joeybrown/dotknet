@@ -37,7 +37,8 @@ public class TarballLayer : ILayer
     buffer[5] = (byte)(seconds >> 8);
     buffer[6] = (byte)(seconds >> 16);
     buffer[7] = (byte)(seconds >> 24);
-    return new MemoryStream(buffer);
+    var stream = new MemoryStream(buffer);
+    return stream;
   }
 
   public Hash DiffId()
@@ -67,6 +68,7 @@ public class TarballLayer : ILayer
   {
     var memoryStream = new MemoryStream();
     _tarArchive.SaveTo(memoryStream, new SharpCompress.Writers.WriterOptions(SharpCompress.Common.CompressionType.None));
+    memoryStream.Seek(0, SeekOrigin.Begin);
     return memoryStream;
   }
 

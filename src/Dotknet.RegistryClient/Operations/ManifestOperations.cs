@@ -13,6 +13,9 @@ namespace Dotknet.RegistryClient.Operations;
 
 public interface IManifestOperations
 {
+  /// Get the manifest for the image. This manifest may be a manifest index.
+  /// If the manifest is an index, it may be desirable to enumerate the
+  /// manifests using <see cref="EnumerateManifests"/>.
   Task<IManifest> GetManifest(string image);
   Task<IEnumerable<IManifest>> EnumerateManifests(string image, IManifestIndex manifestIndex);
 }
