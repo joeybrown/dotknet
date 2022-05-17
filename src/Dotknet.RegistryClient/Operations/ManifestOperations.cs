@@ -16,8 +16,8 @@ public interface IManifestOperations
   /// Get the manifest for the image. This manifest may be a manifest index.
   /// If the manifest is an index, it may be desirable to enumerate the
   /// manifests using <see cref="EnumerateManifests"/>.
-  Task<IManifest> GetManifest(string image);
-  Task<IEnumerable<IManifest>> EnumerateManifests(string image, IManifestIndex manifestIndex);
+  Task<IManifestRegistryResponse> GetManifest(string image);
+  Task<IEnumerable<ManifestDescriptor>> EnumerateManifests(string image, IManifestIndex manifestIndex);
 }
 
 public class ManifestOperations : IManifestOperations
@@ -31,7 +31,7 @@ public class ManifestOperations : IManifestOperations
 
   private bool IsDockerHubImage(string image) => !image.Contains("://");
 
-  public async Task<IManifest> GetManifest(string image)
+  public async Task<IManifestRegistryResponse> GetManifest(string image)
   {
     if (IsDockerHubImage(image))
     {
@@ -41,7 +41,7 @@ public class ManifestOperations : IManifestOperations
     throw new System.NotImplementedException();
   }
 
-  public async Task<IEnumerable<IManifest>> EnumerateManifests(string image, IManifestIndex manifest)
+  public async Task<IEnumerable<ManifestDescriptor>> EnumerateManifests(string image, IManifestIndex manifest)
   {
     if (IsDockerHubImage(image))
     {
@@ -67,7 +67,7 @@ public class ManifestOperations : IManifestOperations
     return dockerHubAuth!.AccessToken!;
   }
 
-  private async Task<IManifest> GetManifestFromDockerHub(string image, string token)
+  private async Task<IManifestRegistryResponse> GetManifestFromDockerHub(string image, string token)
   {
     var endpoint = new Uri($"https://index.docker.io/v2/library/{image}/manifests/latest");
     var requestMessage = new HttpRequestMessage
@@ -84,7 +84,7 @@ public class ManifestOperations : IManifestOperations
     return manifest;
   }
 
-  private async Task<IEnumerable<IManifest>> GetManifestsFromDockerHub(string image, IEnumerable<Descriptor> descriptors, string token)
+  private async Task<IEnumerable<ManifestDescriptor>> GetManifestsFromDockerHub(string image, IEnumerable<Descriptor> descriptors, string token)
   {
     var tasks = descriptors.Select(async descriptor =>
     {
@@ -99,10 +99,11 @@ public class ManifestOperations : IManifestOperations
       var response = await _httpClient.SendAsync(requestMessage);
       response.EnsureSuccessStatusCode();
       var content = await response.Content.ReadAsStringAsync();
-      return Manifest.FromContent(content);
+      var manifest = (IManifest) Manifest.FromContent(content);
+      return new ManifestDescriptor(descriptor, manifest);
     }).ToArray();
 
     await Task.WhenAll(tasks);
-    return tasks.Select(x=>x.Result);
+    return tasks.Select(x => x.Result);
   }
 }

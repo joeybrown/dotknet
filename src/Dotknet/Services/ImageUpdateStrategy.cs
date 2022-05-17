@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Dotknet.Models;
 using Dotknet.RegistryClient;
@@ -27,9 +28,9 @@ public class SingleManifestRepositoryUpdateStrategy : AbstractManifestRepository
 {
 
   private readonly string _image;
-  private readonly IManifest _manifest;
+  private readonly IManifestRegistryResponse _manifest;
 
-  public SingleManifestRepositoryUpdateStrategy(IRegistryClientFactory registryClientFactory, string image, IManifest manifest)
+  public SingleManifestRepositoryUpdateStrategy(IRegistryClientFactory registryClientFactory, string image, IManifestRegistryResponse manifest)
   : base(registryClientFactory)
   {
     _image = image;
@@ -52,20 +53,36 @@ public class MultiManifestRepositoryUpdateStrategy : AbstractManifestRepositoryU
 {
   private string _image;
   private IManifestIndex _manifestIndex;
-  private IEnumerable<IManifest> _manifests;
+  private IEnumerable<ManifestDescriptor> _manifestDescriptors;
 
-  public MultiManifestRepositoryUpdateStrategy(IRegistryClientFactory registryClientFactory, string image, IManifestIndex manifestIndex, IEnumerable<IManifest> manifests)
+  public MultiManifestRepositoryUpdateStrategy(IRegistryClientFactory registryClientFactory, string image, IManifestIndex manifestIndex, IEnumerable<ManifestDescriptor> manifestDescriptors)
   : base(registryClientFactory)
   {
     _image = image;
     _manifestIndex = manifestIndex;
-    _manifests = manifests;
+    _manifestDescriptors = manifestDescriptors; 
   }
 
   public async Task<Hash> UpdateRepositoryImage(ILayer layer)
   {
     var client = _registryClientFactory.Create();
-    var response = await client.BlobOperations.UploadBlob("http://localhost:5000", "foo", layer);
+    var layerUploadTask = client.BlobOperations.UploadLayer("http://localhost:5000", "foo", layer);
+
+    var configUpdateTasks = _manifestDescriptors.Select(async md => {
+      md.Descriptor
+
+      var config = client.BlobOperations.GetConfig("http://localhost:5000", "foo", md.Manifest.);
+
+     // Get config object
+     // Add layer Diff ID to config object
+     // Push config object
+
+     // Add layer digest to manifest object
+     // Push Manifest
+     // return manifest descriptors
+    });
+
+
 
     // 1. Push layer blob
     // 2. Foreach manifest

@@ -29,7 +29,7 @@ public class ArchiveService : IArchiveService
 
   public Task<ILayer> Execute(DirectoryInfo source, string layerRoot)
   {
-    using var tarArchive = TarArchive.Create();
+    var tarArchive = TarArchive.Create();
     tarArchive.AddAllFromDirectory(source.FullName, layerRoot);
     ILayer layer = new TarballLayer(tarArchive);
     return Task.FromResult(layer);

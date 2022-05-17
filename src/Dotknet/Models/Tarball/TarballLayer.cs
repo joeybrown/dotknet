@@ -44,13 +44,15 @@ public class TarballLayer : ILayer
   public Hash DiffId()
   {
     using var stream = Uncompressed();
-    return stream.GetHash();
+    var hash = stream.GetHash();
+    return hash;
   }
 
   public Hash Digest()
   {
     using var stream = Compressed();
-    return stream.GetHash();
+    var hash = stream.GetHash();
+    return hash;
   }
 
   public MediaTypeEnum MediaType()
@@ -61,7 +63,8 @@ public class TarballLayer : ILayer
   public long Size()
   {
     using var stream = Compressed();
-    return stream.Length;
+    var length = stream.Length;
+    return length;
   }
 
   public Stream Uncompressed()

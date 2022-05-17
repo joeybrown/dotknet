@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Dotknet.RegistryClient.Models.Manifests;
 
-public class DockerManifestSchema2 : IManifest
+public class DockerManifestSchema2 : IManifestRegistryResponse
 {
   [JsonIgnore]
   public bool IsManifestIndex => MediaType.IsManifestIndex;
