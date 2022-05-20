@@ -6,4 +6,6 @@ public class PublishCommandOptions
   public string? Output { get; set; }
   public string? BaseImage { get; set; }
   public string LayerRoot => "dotknet-app";
+  public string? DestinationImage {get;set;}
+  public bool SkipDotnetBuild {get;set;}
 }

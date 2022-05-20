@@ -8,7 +8,7 @@ namespace Dotknet.Services;
 
 public interface IPublishService
 {
-  Task Execute(string project, string output, string baseImage, string layerRoot = "dotnet-app");
+  Task Execute(string project, string output, string baseImage, string destinationImage, bool skipDotnetBuild, string layerRoot);
 }
 
 public class PublishService : IPublishService
@@ -30,10 +30,10 @@ public class PublishService : IPublishService
     _archiveService = archiveService;
   }
 
-  public async Task Execute(string project, string output, string baseImage, string layerRoot = "dotnet-app")
+  public async Task Execute(string project, string output, string baseImage, string destinationImage, bool skipDotnetBuild, string layerRoot)
   {
-    var buildLayerTask = BuildLayer(project, output, layerRoot);
-    var buildUpdateServiceTask = BuildImageUpdateService(baseImage, "http://localhost:5000/foo");
+    var buildLayerTask = BuildLayer(project, output, skipDotnetBuild, layerRoot);
+    var buildUpdateServiceTask = BuildImageUpdateService(baseImage, destinationImage);
     await Task.WhenAll(buildLayerTask, buildUpdateServiceTask);
 
     var layer = buildLayerTask.Result;
@@ -48,17 +48,19 @@ public class PublishService : IPublishService
     var registryClient = _registryClientFactory.Create();
     var manifest = await registryClient.ManifestOperations.GetManifest(baseImage);
     if (!manifest.IsManifestIndex) {
-      return new SingleManifestRepositoryUpdateStrategy(_registryClientFactory, destinationImage, manifest);
+      return new SingleManifestRepositoryUpdateStrategy(_registryClientFactory, baseImage, destinationImage, manifest);
     }
     var manifestIndex = (IManifestIndex) manifest;
     var manifests = await registryClient.ManifestOperations.EnumerateManifests(baseImage, manifestIndex);
-    return new MultiManifestRepositoryUpdateStrategy(_registryClientFactory, destinationImage, manifestIndex, manifests);
+    return new MultiManifestRepositoryUpdateStrategy(_registryClientFactory, baseImage, destinationImage, manifestIndex, manifests);
   }
 
-  private async Task<ILayer> BuildLayer(string project, string output, string layerRoot)
+  private async Task<ILayer> BuildLayer(string project, string output, bool skipDotnetBuild, string layerRoot)
   {
-    var dotnetPublishDirectory = await _dotnetPublishService.Execute(project, output);
-    var layer = await _archiveService.Execute(dotnetPublishDirectory, layerRoot);
+    if (!skipDotnetBuild) {
+      await _dotnetPublishService.Execute(project, output);
+    }
+    var layer = await _archiveService.Execute(output, layerRoot);
     return (ILayer)layer;
   }
 }

@@ -10,7 +10,7 @@ namespace Dotknet.Services;
 
 public interface IArchiveService
 {
-  Task<ILayer> Execute(DirectoryInfo source, string layerRoot);
+  Task<ILayer> Execute(string source, string layerRoot);
 }
 
 /// It would be cool if dotnet had native APIs for this.
@@ -27,10 +27,10 @@ public class ArchiveService : IArchiveService
 
   }
 
-  public Task<ILayer> Execute(DirectoryInfo source, string layerRoot)
+  public Task<ILayer> Execute(string source, string layerRoot)
   {
     var tarArchive = TarArchive.Create();
-    tarArchive.AddAllFromDirectory(source.FullName, layerRoot);
+    tarArchive.AddAllFromDirectory((new FileInfo(source)).FullName, layerRoot);
     ILayer layer = new TarballLayer(tarArchive);
     return Task.FromResult(layer);
   }

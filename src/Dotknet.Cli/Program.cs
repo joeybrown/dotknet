@@ -72,9 +72,17 @@ class Program
       {
         IsRequired = true,
       });
+      command.AddOption(new Option<string>("--destinationImage")
+      {
+        IsRequired = true,
+      });
+      command.AddOption(new Option<bool>("--skipDotnetBuild")
+      {
+        IsRequired = false,
+      });
       command.Handler = CommandHandler.Create<IHost>(async host => {
         var options = host.Services.GetRequiredService<IOptions<PublishCommandOptions>>().Value;
-        await host.Services.GetRequiredService<IPublishService>().Execute(options.Project!, options.Output!, options.BaseImage!);
+        await host.Services.GetRequiredService<IPublishService>().Execute(options.Project!, options.Output!, options.BaseImage!, options.DestinationImage!, options.SkipDotnetBuild, options.LayerRoot);
       });
       return command;
     }

@@ -10,7 +10,6 @@ public interface IRegistryClient
   IBlobOperations BlobOperations {get;}
 }
 
-
 public class RegistryClient : IRegistryClient
 {
   private readonly HttpClient _httpClient;

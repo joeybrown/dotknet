@@ -30,15 +30,38 @@ public class ManifestOperations : IManifestOperations
   }
 
   private bool IsDockerHubImage(string image) => !image.Contains("://");
+  private bool IsMcrImage(string image) => image.Contains("mcr.microsoft.com");
 
   public async Task<IManifestRegistryResponse> GetManifest(string image)
   {
+    // This should be consolidated so we don't have this logic all over the place.
+    if (IsMcrImage(image)){
+      return await GetManifestFromMcr(image);
+    }
+
     if (IsDockerHubImage(image))
     {
       var token = await GetDockerHubAuthToken(image);
       return await GetManifestFromDockerHub(image, token);
     }
     throw new System.NotImplementedException();
+  }
+
+  private async Task<IManifestRegistryResponse> GetManifestFromMcr(string image)
+  {
+    var repo = image.Replace("mcr.microsoft.com", string.Empty);
+    var endpoint = new Uri($"https://mcr.microsoft.com/v2/{repo}/manifests/latest");
+    var requestMessage = new HttpRequestMessage
+    {
+      Method = HttpMethod.Get,
+      RequestUri = endpoint
+    };
+    requestMessage.Headers.Add("Accept", MediaTypeEnum.Manifests.Select(x => x.Name));
+    var response = await _httpClient.SendAsync(requestMessage);
+    response.EnsureSuccessStatusCode();
+    var content = await response.Content.ReadAsStringAsync();
+    var manifest = Manifest.FromContent(content);
+    return manifest;
   }
 
   public async Task<IEnumerable<ManifestDescriptor>> EnumerateManifests(string image, IManifestIndex manifest)
@@ -99,8 +122,8 @@ public class ManifestOperations : IManifestOperations
       var response = await _httpClient.SendAsync(requestMessage);
       response.EnsureSuccessStatusCode();
       var content = await response.Content.ReadAsStringAsync();
-      var manifest = (IManifest) Manifest.FromContent(content);
-      return new ManifestDescriptor(descriptor, manifest);
+      var manifest = Manifest.FromContent(content);
+      return new ManifestDescriptor(descriptor, manifest as IManifest);
     }).ToArray();
 
     await Task.WhenAll(tasks);

@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Publish",
+      "name": "Publish (Full)",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
@@ -14,7 +14,32 @@
         "--output",
         "${workspaceFolder}/output",
         "--baseImage",
-        "busybox"
+        "busybox",
+        "--destinationImage",
+        "http://localhost:5000/foo"
+      ],
+      "cwd": "${workspaceFolder}/src/Dotknet.Cli",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Publish (Skip dotnet)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/Dotknet.Cli/bin/Debug/net6.0/Dotknet.Cli.dll",
+      "args": [
+        "publish",
+        "--project",
+        "${workspaceFolder}/src/Dotknet",
+        "--output",
+        "${workspaceFolder}/output",
+        "--baseImage",
+        "mcr.microsoft.com/dotnet/runtime",
+        "--destinationImage",
+        "http://localhost:5000/foo",
+        "--skipDotnetBuild",
+        "true"
       ],
       "cwd": "${workspaceFolder}/src/Dotknet.Cli",
       "console": "internalConsole",

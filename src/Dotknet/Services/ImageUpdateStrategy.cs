@@ -27,13 +27,15 @@ public abstract class AbstractManifestRepositoryUpdateStrategy
 public class SingleManifestRepositoryUpdateStrategy : AbstractManifestRepositoryUpdateStrategy, ImageUpdateStrategy
 {
 
-  private readonly string _image;
+  private readonly string _baseImage;
+  private readonly string _destinationImage;
   private readonly IManifestRegistryResponse _manifest;
 
-  public SingleManifestRepositoryUpdateStrategy(IRegistryClientFactory registryClientFactory, string image, IManifestRegistryResponse manifest)
+  public SingleManifestRepositoryUpdateStrategy(IRegistryClientFactory registryClientFactory, string baseImage, string destinationImage, IManifestRegistryResponse manifest)
   : base(registryClientFactory)
   {
-    _image = image;
+    _baseImage = baseImage;
+    _destinationImage = destinationImage;
     _manifest = manifest;
   }
 
@@ -51,14 +53,16 @@ public class SingleManifestRepositoryUpdateStrategy : AbstractManifestRepository
 
 public class MultiManifestRepositoryUpdateStrategy : AbstractManifestRepositoryUpdateStrategy, ImageUpdateStrategy
 {
-  private string _image;
-  private IManifestIndex _manifestIndex;
-  private IEnumerable<ManifestDescriptor> _manifestDescriptors;
+  private readonly string _destinationImage;
+  private readonly string _baseImage;
+  private readonly IManifestIndex _manifestIndex;
+  private readonly IEnumerable<ManifestDescriptor> _manifestDescriptors;
 
-  public MultiManifestRepositoryUpdateStrategy(IRegistryClientFactory registryClientFactory, string image, IManifestIndex manifestIndex, IEnumerable<ManifestDescriptor> manifestDescriptors)
+  public MultiManifestRepositoryUpdateStrategy(IRegistryClientFactory registryClientFactory, string baseImage, string destinationImage, IManifestIndex manifestIndex, IEnumerable<ManifestDescriptor> manifestDescriptors)
   : base(registryClientFactory)
   {
-    _image = image;
+    _destinationImage = destinationImage;
+    _baseImage = baseImage;
     _manifestIndex = manifestIndex;
     _manifestDescriptors = manifestDescriptors; 
   }
@@ -66,12 +70,10 @@ public class MultiManifestRepositoryUpdateStrategy : AbstractManifestRepositoryU
   public async Task<Hash> UpdateRepositoryImage(ILayer layer)
   {
     var client = _registryClientFactory.Create();
-    var layerUploadTask = client.BlobOperations.UploadLayer("http://localhost:5000", "foo", layer);
+    var layerUploadTask = client.BlobOperations.UploadLayer(_destinationImage, layer);
 
     var configUpdateTasks = _manifestDescriptors.Select(async md => {
-      md.Descriptor
-
-      var config = client.BlobOperations.GetConfig("http://localhost:5000", "foo", md.Manifest.);
+      var config = client.BlobOperations.GetConfig(_baseImage, md.Manifest.Config);
 
      // Get config object
      // Add layer Diff ID to config object
