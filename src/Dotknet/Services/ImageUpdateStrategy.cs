@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Dotknet.Models;
 using Dotknet.RegistryClient;
 using Dotknet.RegistryClient.Models;
 using Dotknet.RegistryClient.Models.Manifests;
@@ -64,27 +63,32 @@ public class MultiManifestRepositoryUpdateStrategy : AbstractManifestRepositoryU
     _destinationImage = destinationImage;
     _baseImage = baseImage;
     _manifestIndex = manifestIndex;
-    _manifestDescriptors = manifestDescriptors; 
+    _manifestDescriptors = manifestDescriptors;
   }
 
   public async Task<Hash> UpdateRepositoryImage(ILayer layer)
   {
     var client = _registryClientFactory.Create();
-    var layerUploadTask = client.BlobOperations.UploadLayer(_destinationImage, layer);
+    await client.BlobOperations.UploadLayer(_destinationImage, layer);
 
-    var configUpdateTasks = _manifestDescriptors.Select(async md => {
-      var config = client.BlobOperations.GetConfig(_baseImage, md.Manifest.Config);
+    var configUpdateTasks = _manifestDescriptors.Select(async md =>
+    {
+      var config = await client.BlobOperations.GetConfig(_baseImage, md.Manifest.Config);
 
-     // Get config object
-     // Add layer Diff ID to config object
-     // Push config object
+      // Get config object
+      // Add layer Diff ID to config object
+      // Push config object
 
-     // Add layer digest to manifest object
-     // Push Manifest
-     // return manifest descriptors
-    });
+      // Add layer digest to manifest object
+      // Push Manifest
+      // return manifest descriptors
 
+      return config;
+    }).ToList();
 
+    await Task.WhenAll(configUpdateTasks);
+
+    var configs = configUpdateTasks.Select(x=>x.Result);
 
     // 1. Push layer blob
     // 2. Foreach manifest

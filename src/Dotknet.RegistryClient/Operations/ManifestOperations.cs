@@ -35,7 +35,8 @@ public class ManifestOperations : IManifestOperations
   public async Task<IManifestRegistryResponse> GetManifest(string image)
   {
     // This should be consolidated so we don't have this logic all over the place.
-    if (IsMcrImage(image)){
+    if (IsMcrImage(image))
+    {
       return await GetManifestFromMcr(image);
     }
 
@@ -66,11 +67,16 @@ public class ManifestOperations : IManifestOperations
 
   public async Task<IEnumerable<ManifestDescriptor>> EnumerateManifests(string image, IManifestIndex manifest)
   {
+    if (IsMcrImage(image))
+    {
+      return await GetManifestsFromMcr(image, manifest.Manifests);
+    }
     if (IsDockerHubImage(image))
     {
       var token = await GetDockerHubAuthToken(image);
       return await GetManifestsFromDockerHub(image, manifest.Manifests, token);
     }
+
     throw new System.NotImplementedException();
   }
 
@@ -118,6 +124,29 @@ public class ManifestOperations : IManifestOperations
         RequestUri = endpoint
       };
       requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+      requestMessage.Headers.Add("Accept", MediaTypeEnum.Manifests.Select(x => x.Name));
+      var response = await _httpClient.SendAsync(requestMessage);
+      response.EnsureSuccessStatusCode();
+      var content = await response.Content.ReadAsStringAsync();
+      var manifest = Manifest.FromContent(content);
+      return new ManifestDescriptor(descriptor, manifest as IManifest);
+    }).ToArray();
+
+    await Task.WhenAll(tasks);
+    return tasks.Select(x => x.Result);
+  }
+
+  private async Task<IEnumerable<ManifestDescriptor>> GetManifestsFromMcr(string image, IEnumerable<Descriptor> descriptors)
+  {
+    var tasks = descriptors.Select(async descriptor =>
+    {
+       var repo = image.Replace("mcr.microsoft.com", string.Empty);
+      var endpoint = new Uri($"https://mcr.microsoft.com/v2/{repo}/manifests/{descriptor.Digest}");
+      var requestMessage = new HttpRequestMessage
+      {
+        Method = HttpMethod.Get,
+        RequestUri = endpoint
+      };
       requestMessage.Headers.Add("Accept", MediaTypeEnum.Manifests.Select(x => x.Name));
       var response = await _httpClient.SendAsync(requestMessage);
       response.EnsureSuccessStatusCode();
