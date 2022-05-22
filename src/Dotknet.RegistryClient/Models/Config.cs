@@ -1,6 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+using Dotknet.RegistryClient.Extensions;
 using Dotknet.RegistryClient.Models;
 
 namespace Dotnet.RegistryClient.Models;
@@ -37,6 +42,18 @@ public class ConfigFile
 
   [JsonPropertyName("os.version")]
   public string OSVersion { get; set; }
+
+  public ConfigFile AddLayer(ILayer layer) {
+    RootFS.AddLayer(layer);
+    return this;
+  }
+
+  public async Task<Descriptor> BuildDescriptor(Descriptor baseDescriptor){
+    using var stream = new MemoryStream();
+    await JsonSerializer.SerializeAsync(stream, this);
+    var digest = stream.GetHash();
+    return baseDescriptor;
+  }
 }
 
 public class History
@@ -65,6 +82,12 @@ public class RootFS
 
   [JsonPropertyName("diff_ids")]
   public IEnumerable<Hash> DiffIds { get; set; }
+
+  internal RootFS AddLayer(ILayer layer)
+  {
+    DiffIds = DiffIds.Append(layer.DiffId());
+    return this;
+  }
 }
 
 public class HealthConfig

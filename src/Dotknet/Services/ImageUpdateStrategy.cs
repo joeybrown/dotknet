@@ -74,6 +74,12 @@ public class MultiManifestRepositoryUpdateStrategy : AbstractManifestRepositoryU
     var configUpdateTasks = _manifestDescriptors.Select(async md =>
     {
       var config = await client.BlobOperations.GetConfig(_baseImage, md.Manifest.Config);
+      
+      var descriptor = config.BuildDescriptor(md.Manifest.Config);
+      
+      config = config.AddLayer(layer);
+      md.Manifest.Config = await config.BuildDescriptor(md.Manifest.Config);
+
 
       // Get config object
       // Add layer Diff ID to config object
