@@ -44,7 +44,6 @@ public class HashConverter : JsonConverter<Hash>
 
   public override void Write(Utf8JsonWriter writer, Hash value, JsonSerializerOptions options)
   {
-    // todo
-    writer.WriteRawValue(value.ToString());
+    JsonSerializer.Serialize(writer, value.ToString());
   }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
@@ -12,6 +13,7 @@ public interface IBlobOperations
 {
   Task UploadLayer(string image, ILayer layer);
   Task<ConfigFile> GetConfig(string image, Descriptor descriptor);
+  Task<Descriptor> UploadConfig(string image, ConfigFile config, Descriptor baseDescriptor);
 }
 
 public class BlobOperations: IBlobOperations
@@ -34,9 +36,12 @@ public class BlobOperations: IBlobOperations
     throw new System.NotImplementedException();
   }
 
+  private (string apiBase, string repository) ParseImage(string image) {
+    return ("", "");
+  }
+
   public Task UploadLayer(string image, ILayer layer)
   {
-
     // var locationUrl = string.Format("{0}/v2/{1}/blobs/uploads/", repository, image);
     // var locationResponse = await _httpClient.PostAsync(locationUrl, null);
     // locationResponse.EnsureSuccessStatusCode();
@@ -63,5 +68,19 @@ public class BlobOperations: IBlobOperations
     var content = await response.Content.ReadAsStreamAsync();
     var config = await JsonSerializer.DeserializeAsync<ConfigFile>(content);
     return config;
+  }
+
+  public async Task<Descriptor> UploadConfig(string image, ConfigFile config, Descriptor baseDescriptor)
+  {
+    var descriptor = await config.BuildDescriptor(baseDescriptor);
+    using var content = new MemoryStream();
+    await JsonSerializer.SerializeAsync(content, config);
+    content.Seek(0, SeekOrigin.Begin);
+
+
+
+
+
+    return descriptor;
   }
 }

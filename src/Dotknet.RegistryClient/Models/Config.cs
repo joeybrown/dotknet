@@ -49,10 +49,15 @@ public class ConfigFile
   }
 
   public async Task<Descriptor> BuildDescriptor(Descriptor baseDescriptor){
+    var descriptor = JsonSerializer.Deserialize<Descriptor>(JsonSerializer.Serialize(baseDescriptor));
+
     using var stream = new MemoryStream();
     await JsonSerializer.SerializeAsync(stream, this);
-    var digest = stream.GetHash();
-    return baseDescriptor;
+
+    descriptor!.Digest = stream.GetHash();
+    descriptor!.Size = stream.Length;
+
+    return descriptor;
   }
 }
 
