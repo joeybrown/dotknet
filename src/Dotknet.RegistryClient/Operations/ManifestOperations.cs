@@ -16,8 +16,8 @@ public interface IManifestOperations
   /// Get the manifest for the image. This manifest may be a manifest index.
   /// If the manifest is an index, it may be desirable to enumerate the
   /// manifests using <see cref="EnumerateManifests"/>.
-  Task<IManifestRegistryResponse> GetManifest(string image);
-  Task<IEnumerable<ManifestDescriptor>> EnumerateManifests(string image, IManifestIndex manifestIndex);
+  Task<IManifestRegistryResponse> GetManifest(IImageReference image);
+  Task<IEnumerable<ManifestDescriptor>> EnumerateManifests(IImageReference image, IManifestIndex manifestIndex);
 }
 
 public class ManifestOperations : IManifestOperations
@@ -29,18 +29,15 @@ public class ManifestOperations : IManifestOperations
     _httpClient = httpClient;
   }
 
-  private bool IsDockerHubImage(string image) => !image.Contains("://");
-  private bool IsMcrImage(string image) => image.Contains("mcr.microsoft.com");
-
-  public async Task<IManifestRegistryResponse> GetManifest(string image)
+  public async Task<IManifestRegistryResponse> GetManifest(IImageReference image)
   {
     // This should be consolidated so we don't have this logic all over the place.
-    if (IsMcrImage(image))
+    if (image.IsMcrImage)
     {
       return await GetManifestFromMcr(image);
     }
 
-    if (IsDockerHubImage(image))
+    if (image.IsDockerHubImage)
     {
       var token = await GetDockerHubAuthToken(image);
       return await GetManifestFromDockerHub(image, token);
@@ -48,10 +45,9 @@ public class ManifestOperations : IManifestOperations
     throw new System.NotImplementedException();
   }
 
-  private async Task<IManifestRegistryResponse> GetManifestFromMcr(string image)
+  private async Task<IManifestRegistryResponse> GetManifestFromMcr(IImageReference image)
   {
-    var repo = image.Replace("mcr.microsoft.com", string.Empty);
-    var endpoint = new Uri($"https://mcr.microsoft.com/v2/{repo}/manifests/latest");
+    var endpoint = new Uri($"https://mcr.microsoft.com/v2/{image.Repository}/manifests/{image.Reference}");
     var requestMessage = new HttpRequestMessage
     {
       Method = HttpMethod.Get,
@@ -65,13 +61,13 @@ public class ManifestOperations : IManifestOperations
     return manifest;
   }
 
-  public async Task<IEnumerable<ManifestDescriptor>> EnumerateManifests(string image, IManifestIndex manifest)
+  public async Task<IEnumerable<ManifestDescriptor>> EnumerateManifests(IImageReference image, IManifestIndex manifest)
   {
-    if (IsMcrImage(image))
+    if (image.IsMcrImage)
     {
       return await GetManifestsFromMcr(image, manifest.Manifests);
     }
-    if (IsDockerHubImage(image))
+    if (image.IsDockerHubImage)
     {
       var token = await GetDockerHubAuthToken(image);
       return await GetManifestsFromDockerHub(image, manifest.Manifests, token);
@@ -86,9 +82,9 @@ public class ManifestOperations : IManifestOperations
     public string? AccessToken { get; set; }
   }
 
-  public async Task<string> GetDockerHubAuthToken(string image)
+  public async Task<string> GetDockerHubAuthToken(IImageReference image)
   {
-    var endpoint = $"https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/{image}:pull";
+    var endpoint = $"https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/{image.Repository}:pull";
     var response = await _httpClient.GetAsync(endpoint);
     response.EnsureSuccessStatusCode();
     var content = await response.Content.ReadAsStreamAsync();
@@ -96,9 +92,9 @@ public class ManifestOperations : IManifestOperations
     return dockerHubAuth!.AccessToken!;
   }
 
-  private async Task<IManifestRegistryResponse> GetManifestFromDockerHub(string image, string token)
+  private async Task<IManifestRegistryResponse> GetManifestFromDockerHub(IImageReference image, string token)
   {
-    var endpoint = new Uri($"https://index.docker.io/v2/library/{image}/manifests/latest");
+    var endpoint = new Uri($"https://index.docker.io/v2/library/{image.Repository}/manifests/{image.Reference}");
     var requestMessage = new HttpRequestMessage
     {
       Method = HttpMethod.Get,
@@ -113,11 +109,11 @@ public class ManifestOperations : IManifestOperations
     return manifest;
   }
 
-  private async Task<IEnumerable<ManifestDescriptor>> GetManifestsFromDockerHub(string image, IEnumerable<Descriptor> descriptors, string token)
+  private async Task<IEnumerable<ManifestDescriptor>> GetManifestsFromDockerHub(IImageReference image, IEnumerable<Descriptor> descriptors, string token)
   {
     var tasks = descriptors.Select(async descriptor =>
     {
-      var endpoint = new Uri($"https://index.docker.io/v2/library/{image}/manifests/{descriptor.Digest}");
+      var endpoint = new Uri($"https://index.docker.io/v2/library/{image.Repository}/manifests/{descriptor.Digest}");
       var requestMessage = new HttpRequestMessage
       {
         Method = HttpMethod.Get,
@@ -136,12 +132,11 @@ public class ManifestOperations : IManifestOperations
     return tasks.Select(x => x.Result);
   }
 
-  private async Task<IEnumerable<ManifestDescriptor>> GetManifestsFromMcr(string image, IEnumerable<Descriptor> descriptors)
+  private async Task<IEnumerable<ManifestDescriptor>> GetManifestsFromMcr(IImageReference image, IEnumerable<Descriptor> descriptors)
   {
     var tasks = descriptors.Select(async descriptor =>
     {
-       var repo = image.Replace("mcr.microsoft.com", string.Empty);
-      var endpoint = new Uri($"https://mcr.microsoft.com/v2/{repo}/manifests/{descriptor.Digest}");
+      var endpoint = new Uri($"https://mcr.microsoft.com/v2/{image.Repository}/manifests/{descriptor.Digest}");
       var requestMessage = new HttpRequestMessage
       {
         Method = HttpMethod.Get,

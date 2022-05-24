@@ -8,7 +8,7 @@ namespace Dotknet.Services;
 
 public interface IPublishService
 {
-  Task Execute(string project, string output, string baseImage, string destinationImage, bool skipDotnetBuild, string layerRoot);
+  Task Execute(string project, string output, IImageReference baseImage, IImageReference destinationImage, bool skipDotnetBuild, string layerRoot);
 }
 
 public class PublishService : IPublishService
@@ -30,7 +30,7 @@ public class PublishService : IPublishService
     _archiveService = archiveService;
   }
 
-  public async Task Execute(string project, string output, string baseImage, string destinationImage, bool skipDotnetBuild, string layerRoot)
+  public async Task Execute(string project, string output, IImageReference baseImage, IImageReference destinationImage, bool skipDotnetBuild, string layerRoot)
   {
     var buildLayerTask = BuildLayer(project, output, skipDotnetBuild, layerRoot);
     var buildUpdateServiceTask = BuildImageUpdateService(baseImage, destinationImage);
@@ -44,7 +44,7 @@ public class PublishService : IPublishService
     layer.Dispose();
   }
 
-  private async Task<ImageUpdateStrategy> BuildImageUpdateService(string baseImage, string destinationImage) {
+  private async Task<ImageUpdateStrategy> BuildImageUpdateService(IImageReference baseImage, IImageReference destinationImage) {
     var registryClient = _registryClientFactory.Create();
     var manifest = await registryClient.ManifestOperations.GetManifest(baseImage);
     if (!manifest.IsManifestIndex) {

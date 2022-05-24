@@ -11,9 +11,9 @@ namespace Dotknet.RegistryClient.Operations;
 
 public interface IBlobOperations
 {
-  Task UploadLayer(string image, ILayer layer);
-  Task<ConfigFile> GetConfig(string image, Descriptor descriptor);
-  Task<Descriptor> UploadConfig(string image, ConfigFile config, Descriptor baseDescriptor);
+  Task UploadLayer(IImageReference image, ILayer layer);
+  Task<ConfigFile> GetConfig(IImageReference image, Descriptor descriptor);
+  Task<Descriptor> UploadConfig(IImageReference image, ConfigFile config, Descriptor baseDescriptor);
 }
 
 public class BlobOperations: IBlobOperations
@@ -25,38 +25,34 @@ public class BlobOperations: IBlobOperations
     _httpClient = httpClient;
   }
 
-  private bool IsMcrImage(string image) => image.Contains("mcr.microsoft.com");
-
-  public async Task<ConfigFile> GetConfig(string image, Descriptor descriptor)
+  public async Task<ConfigFile> GetConfig(IImageReference image, Descriptor descriptor)
   {
-    if (IsMcrImage(image)){
+    if (image.IsMcrImage){
       return await GetConfigFromMcr(image, descriptor);
     }
 
     throw new System.NotImplementedException();
   }
 
-  private (string apiBase, string repository) ParseImage(string image) {
-    return ("", "");
+  private async Task UploadBlob(IImageReference image, Hash digest, StreamContent content){
+    var locationUrl = new Uri($"{image.Domain}/v2/{image.Repository}/blobs/uploads/");
+    var locationResponse = await _httpClient.PostAsync(locationUrl, null);
+    locationResponse.EnsureSuccessStatusCode();
+    var uploadUri = string.Format("{0}&digest={1}", locationResponse.Headers.Location, digest);
+    var uploadResponse = await _httpClient.PutAsync(uploadUri, content);
+    uploadResponse.EnsureSuccessStatusCode();
   }
 
-  public Task UploadLayer(string image, ILayer layer)
+  public async Task UploadLayer(IImageReference image, ILayer layer)
   {
-    // var locationUrl = string.Format("{0}/v2/{1}/blobs/uploads/", repository, image);
-    // var locationResponse = await _httpClient.PostAsync(locationUrl, null);
-    // locationResponse.EnsureSuccessStatusCode();
-    // var digest = layer.Digest();
-    // var uploadUri = string.Format("{0}&digest={1}", locationResponse.Headers.Location, digest);
-    // using var content = layer.Compressed();
-    // var streamContent = new StreamContent(content);
-    // var uploadResponse = await _httpClient.PutAsync(uploadUri, streamContent);
-    // uploadResponse.EnsureSuccessStatusCode();
-    return Task.CompletedTask;
+    var digest = layer.Digest();
+    using var content = layer.Compressed();
+    using var streamContent = new StreamContent(content);
+    await UploadBlob(image, layer.Digest(), streamContent);
   }
 
-  private async Task<ConfigFile> GetConfigFromMcr(string image, Descriptor descriptor){
-    var repo = image.Replace("mcr.microsoft.com", string.Empty);
-    var endpoint = new Uri($"https://mcr.microsoft.com/v2/{repo}/blobs/{descriptor.Digest}");
+  private async Task<ConfigFile> GetConfigFromMcr(IImageReference image, Descriptor descriptor){    
+    var endpoint = new Uri($"https://mcr.microsoft.com/v2/{image.Repository}/blobs/{descriptor.Digest}");
     var requestMessage = new HttpRequestMessage
     {
       Method = HttpMethod.Get,
@@ -70,17 +66,14 @@ public class BlobOperations: IBlobOperations
     return config;
   }
 
-  public async Task<Descriptor> UploadConfig(string image, ConfigFile config, Descriptor baseDescriptor)
+  public async Task<Descriptor> UploadConfig(IImageReference image, ConfigFile config, Descriptor baseDescriptor)
   {
-    var descriptor = await config.BuildDescriptor(baseDescriptor);
     using var content = new MemoryStream();
     await JsonSerializer.SerializeAsync(content, config);
     content.Seek(0, SeekOrigin.Begin);
-
-
-
-
-
+    var streamContent = new StreamContent(content);
+    var descriptor = await config.BuildDescriptor(baseDescriptor);
+    await UploadBlob(image, descriptor.Digest, streamContent);
     return descriptor;
   }
 }

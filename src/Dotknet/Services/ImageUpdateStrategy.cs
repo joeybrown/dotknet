@@ -26,11 +26,11 @@ public abstract class AbstractManifestRepositoryUpdateStrategy
 public class SingleManifestRepositoryUpdateStrategy : AbstractManifestRepositoryUpdateStrategy, ImageUpdateStrategy
 {
 
-  private readonly string _baseImage;
-  private readonly string _destinationImage;
+  private readonly IImageReference _baseImage;
+  private readonly IImageReference _destinationImage;
   private readonly IManifestRegistryResponse _manifest;
 
-  public SingleManifestRepositoryUpdateStrategy(IRegistryClientFactory registryClientFactory, string baseImage, string destinationImage, IManifestRegistryResponse manifest)
+  public SingleManifestRepositoryUpdateStrategy(IRegistryClientFactory registryClientFactory, IImageReference baseImage, IImageReference destinationImage, IManifestRegistryResponse manifest)
   : base(registryClientFactory)
   {
     _baseImage = baseImage;
@@ -52,12 +52,12 @@ public class SingleManifestRepositoryUpdateStrategy : AbstractManifestRepository
 
 public class MultiManifestRepositoryUpdateStrategy : AbstractManifestRepositoryUpdateStrategy, ImageUpdateStrategy
 {
-  private readonly string _destinationImage;
-  private readonly string _baseImage;
+  private readonly IImageReference _destinationImage;
+  private readonly IImageReference _baseImage;
   private readonly IManifestIndex _manifestIndex;
   private readonly IEnumerable<ManifestDescriptor> _manifestDescriptors;
 
-  public MultiManifestRepositoryUpdateStrategy(IRegistryClientFactory registryClientFactory, string baseImage, string destinationImage, IManifestIndex manifestIndex, IEnumerable<ManifestDescriptor> manifestDescriptors)
+  public MultiManifestRepositoryUpdateStrategy(IRegistryClientFactory registryClientFactory, IImageReference baseImage, IImageReference destinationImage, IManifestIndex manifestIndex, IEnumerable<ManifestDescriptor> manifestDescriptors)
   : base(registryClientFactory)
   {
     _destinationImage = destinationImage;
@@ -75,7 +75,7 @@ public class MultiManifestRepositoryUpdateStrategy : AbstractManifestRepositoryU
     {
       var config = await client.BlobOperations.GetConfig(_baseImage, md.Manifest.Config);
       config = config.AddLayer(layer);
-      md.Manifest.Config = await client.BlobOperations.UploadConfig(_baseImage, config);;
+      md.Manifest.Config = await client.BlobOperations.UploadConfig(_destinationImage, config, md.Manifest.Config);
 
 
 
