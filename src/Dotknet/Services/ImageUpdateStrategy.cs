@@ -71,6 +71,12 @@ public class MultiManifestRepositoryUpdateStrategy : AbstractManifestRepositoryU
     var client = _registryClientFactory.Create();
     var (layerDescriptor, diffId) = await client.BlobOperations.UploadLayer(_destinationImage, layer);
 
+    var imageCopyTasks = _manifestDescriptors.Select(async md => {
+      await client.BlobOperations.CopyLayer(_baseImage, _destinationImage, md.Descriptor);
+    });
+
+    await Task.WhenAll(imageCopyTasks);
+
     var manifestsUpdateTasks = _manifestDescriptors.Select(async md =>
     {
       // Update Manifest Config File

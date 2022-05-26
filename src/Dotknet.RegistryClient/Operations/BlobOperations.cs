@@ -11,6 +11,7 @@ namespace Dotknet.RegistryClient.Operations;
 
 public interface IBlobOperations
 {
+  Task<Descriptor> CopyLayer(IImageReference sourceImage, IImageReference destinationImage, Descriptor descriptor);
   Task<(Descriptor descriptor, Hash diffId)> UploadLayer(IImageReference image, ILayer layer);
   Task<ConfigFile> GetConfig(IImageReference image, Descriptor descriptor);
   Task<Descriptor> UploadConfig(IImageReference image, ConfigFile config, Descriptor baseDescriptor);
@@ -86,6 +87,12 @@ public class BlobOperations: IBlobOperations
     var descriptor = await config.BuildDescriptor(baseDescriptor);
     await UploadBlob(image, descriptor.Digest, streamContent);
     return descriptor;
+  }
+
+  public Task<Descriptor> CopyLayer(IImageReference sourceImage, IImageReference destinationImage, Descriptor descriptor)
+  {
+    // todo :)
+    throw new NotImplementedException();
   }
 
   // public async Task<Descriptor> UploadManifest(IImageReference image, IManifest manifest, Descriptor baseDescriptor)
