@@ -43,8 +43,8 @@ public class ConfigFile
   [JsonPropertyName("os.version")]
   public string OSVersion { get; set; }
 
-  public ConfigFile AddLayer(ILayer layer) {
-    RootFS.AddLayer(layer);
+  public ConfigFile AddLayer(Hash diffId) {
+    RootFS.AddLayer(diffId);
     return this;
   }
 
@@ -88,9 +88,9 @@ public class RootFS
   [JsonPropertyName("diff_ids")]
   public IEnumerable<Hash> DiffIds { get; set; }
 
-  internal RootFS AddLayer(ILayer layer)
+  internal RootFS AddLayer(Hash diffId)
   {
-    DiffIds = DiffIds.Append(layer.DiffId());
+    DiffIds = DiffIds.Append(diffId);
     return this;
   }
 }

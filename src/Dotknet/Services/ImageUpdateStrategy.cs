@@ -69,39 +69,25 @@ public class MultiManifestRepositoryUpdateStrategy : AbstractManifestRepositoryU
   public async Task<Hash> UpdateRepositoryImage(ILayer layer)
   {
     var client = _registryClientFactory.Create();
-    await client.BlobOperations.UploadLayer(_destinationImage, layer);
+    var (layerDescriptor, diffId) = await client.BlobOperations.UploadLayer(_destinationImage, layer);
 
-    var configUpdateTasks = _manifestDescriptors.Select(async md =>
+    var manifestsUpdateTasks = _manifestDescriptors.Select(async md =>
     {
+      // Update Manifest Config File
       var config = await client.BlobOperations.GetConfig(_baseImage, md.Manifest.Config);
-      config = config.AddLayer(layer);
-      md.Manifest.Config = await client.BlobOperations.UploadConfig(_destinationImage, config, md.Manifest.Config);
+      config.AddLayer(diffId);
+      var configDescriptor = await client.BlobOperations.UploadConfig(_destinationImage, config, md.Manifest.Config);
 
+      // Update Manifest
+      md.Manifest.Config = configDescriptor;
+      md.Manifest.AddLayer(layerDescriptor);
+      return await client.ManifestOperations.UploadManifest(_destinationImage, md.Manifest, md.Descriptor);
+    });
 
+    await Task.WhenAll(manifestsUpdateTasks);
 
+    _manifestIndex.Manifests = manifestsUpdateTasks.Select(x=>x.Result);
 
-      // Push config object
-
-      // Add layer digest to manifest object
-      // Push Manifest
-      // return manifest descriptors
-
-      return config;
-    }).ToList();
-
-    await Task.WhenAll(configUpdateTasks);
-
-    var configs = configUpdateTasks.Select(x=>x.Result);
-
-    // 1. Push layer blob
-    // 2. Foreach manifest
-    //   a. Add layer Diff ID to config object
-    //   b. Push config object
-    //   c. Add layer Digest to manifest object
-    //   d. Add config descriptor to manifest object
-    //   e. Push manifest
-    // 3. Update manifest index references
-    // 4. Push manifest index
-    throw new System.NotImplementedException();
+    return await client.ManifestOperations.UploadManifest(_destinationImage, _manifestIndex);
   }
 }

@@ -1,19 +1,20 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Dotknet.RegistryClient.Models;
+using Dotknet.RegistryClient.Models.Manifests;
 using Dotnet.RegistryClient.Models;
 
 namespace Dotknet.RegistryClient.Operations;
 
 public interface IBlobOperations
 {
-  Task UploadLayer(IImageReference image, ILayer layer);
+  Task<(Descriptor descriptor, Hash diffId)> UploadLayer(IImageReference image, ILayer layer);
   Task<ConfigFile> GetConfig(IImageReference image, Descriptor descriptor);
   Task<Descriptor> UploadConfig(IImageReference image, ConfigFile config, Descriptor baseDescriptor);
+  // Task<Descriptor> UploadManifest(IImageReference image, IManifest manifest, Descriptor baseDescriptor);
 }
 
 public class BlobOperations: IBlobOperations
@@ -40,15 +41,25 @@ public class BlobOperations: IBlobOperations
     locationResponse.EnsureSuccessStatusCode();
     var uploadUri = string.Format("{0}&digest={1}", locationResponse.Headers.Location, digest);
     var uploadResponse = await _httpClient.PutAsync(uploadUri, content);
+    var response = await uploadResponse.Content.ReadAsStringAsync();
     uploadResponse.EnsureSuccessStatusCode();
   }
 
-  public async Task UploadLayer(IImageReference image, ILayer layer)
+  public async Task<(Descriptor descriptor, Hash diffId)> UploadLayer(IImageReference image, ILayer layer)
   {
     var digest = layer.Digest();
     using var content = layer.Compressed();
     using var streamContent = new StreamContent(content);
-    await UploadBlob(image, layer.Digest(), streamContent);
+    await UploadBlob(image, digest, streamContent);
+
+    var descriptor = new Descriptor{
+      MediaType = MediaTypeEnum.DockerUncompressedLayer,
+      Size = layer.Size(),
+      Digest = digest
+    };
+    var diffId = layer.DiffId();
+
+    return (descriptor, diffId);
   }
 
   private async Task<ConfigFile> GetConfigFromMcr(IImageReference image, Descriptor descriptor){    
@@ -76,4 +87,14 @@ public class BlobOperations: IBlobOperations
     await UploadBlob(image, descriptor.Digest, streamContent);
     return descriptor;
   }
+
+  // public async Task<Descriptor> UploadManifest(IImageReference image, IManifest manifest, Descriptor baseDescriptor)
+  // {
+  //   using var json = await manifest.ToJson();
+  //   json.Seek(0, SeekOrigin.Begin);
+  //   var streamContent = new StreamContent(json);
+  //   var descriptor = await manifest.BuildDescriptor(baseDescriptor);
+  //   await UploadBlob(image, descriptor.Digest, streamContent);
+  //   return descriptor;
+  // }
 }

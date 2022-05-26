@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace Dotknet.RegistryClient.Models.Manifests;
 
@@ -7,16 +9,23 @@ public interface IManifestRegistryResponse
 {
   int SchemaVersion { get; }
   bool IsManifestIndex { get; }
+  MediaTypeEnum MediaType { get; set; }
 }
 
 public interface IManifestIndex : IManifestRegistryResponse
 {
-  IEnumerable<Descriptor> Manifests { get; }
+  IEnumerable<Descriptor> Manifests { get; set; }
+  Task<Stream> ToJson();
+  public MediaTypeEnum MediaType { get; set; }
 }
 
 public interface IManifest : IManifestRegistryResponse
 {
-  public Descriptor Config { get; set; }
+  Descriptor Config { get; set; }
+  void AddLayer(Descriptor layerDescriptor);
+  Task<Descriptor> BuildDescriptor(Descriptor baseDescriptor);
+  Task<Stream> ToJson();
+  public MediaTypeEnum MediaType { get; set; }
 }
 
 public abstract class Manifest

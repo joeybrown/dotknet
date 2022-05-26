@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -18,6 +19,8 @@ public interface IManifestOperations
   /// manifests using <see cref="EnumerateManifests"/>.
   Task<IManifestRegistryResponse> GetManifest(IImageReference image);
   Task<IEnumerable<ManifestDescriptor>> EnumerateManifests(IImageReference image, IManifestIndex manifestIndex);
+  Task<Hash> UploadManifest(IImageReference image, IManifestIndex manifestIndex);
+  Task<Descriptor> UploadManifest(IImageReference image, IManifest manifest, Descriptor baseDescriptor);
 }
 
 public class ManifestOperations : IManifestOperations
@@ -152,5 +155,37 @@ public class ManifestOperations : IManifestOperations
 
     await Task.WhenAll(tasks);
     return tasks.Select(x => x.Result);
+  }
+
+  public Task<Hash> UploadManifest(IImageReference image, IManifestIndex manifestIndex)
+  {
+    // todo!
+
+
+
+    throw new NotImplementedException();
+  }
+
+  public async Task<Descriptor> UploadManifest(IImageReference image, IManifest manifest, Descriptor baseDescriptor)
+  {
+    var manifestDescriptor = await manifest.BuildDescriptor(baseDescriptor);
+    using var json = await manifest.ToJson();
+    json.Seek(0, SeekOrigin.Begin);
+
+    var streamContent = new StreamContent(json);
+    streamContent.Headers.Add("Content-Type", manifest.MediaType.Name);
+
+    var endpoint = new Uri($"{image.Domain}/v2/{image.Repository}/manifests/{manifestDescriptor.Digest}");
+    var requestMessage = new HttpRequestMessage
+    {
+      Method = HttpMethod.Put,
+      RequestUri = endpoint,
+      Content = streamContent
+    };
+    var response = await _httpClient.SendAsync(requestMessage);
+    // response.EnsureSuccessStatusCode();
+    var strResponse = await response.Content.ReadAsStringAsync();
+    var descriptor = await manifest.BuildDescriptor(baseDescriptor);
+    return descriptor;
   }
 }
