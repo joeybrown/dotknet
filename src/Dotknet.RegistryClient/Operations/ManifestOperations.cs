@@ -7,6 +7,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Dotknet.RegistryClient.Extensions;
 using Dotknet.RegistryClient.Models;
 using Dotknet.RegistryClient.Models.Manifests;
 
@@ -157,13 +158,27 @@ public class ManifestOperations : IManifestOperations
     return tasks.Select(x => x.Result);
   }
 
-  public Task<Hash> UploadManifest(IImageReference image, IManifestIndex manifestIndex)
+  public async Task<Hash> UploadManifest(IImageReference image, IManifestIndex manifest)
   {
-    // todo!
+    using var json = await manifest.ToJson();
+    var digest = json.GetHash();
+    json.Seek(0, SeekOrigin.Begin);
 
+    var streamContent = new StreamContent(json);
+    streamContent.Headers.Add("Content-Type", manifest.MediaType.Name);
 
+    var endpoint = new Uri($"{image.Domain}/v2/{image.Repository}/manifests/{digest}");
+    var requestMessage = new HttpRequestMessage
+    {
+      Method = HttpMethod.Put,
+      RequestUri = endpoint,
+      Content = streamContent
+    };
 
-    throw new NotImplementedException();
+    var response = await _httpClient.SendAsync(requestMessage);
+    response.EnsureSuccessStatusCode();
+
+    return digest;
   }
 
   public async Task<Descriptor> UploadManifest(IImageReference image, IManifest manifest, Descriptor baseDescriptor)
