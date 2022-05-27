@@ -34,6 +34,7 @@ public class PublishService : IPublishService
   {
     var buildLayerTask = BuildLayer(project, output, skipDotnetBuild, layerRoot);
     var buildUpdateServiceTask = BuildImageUpdateService(baseImage, destinationImage);
+    
     await Task.WhenAll(buildLayerTask, buildUpdateServiceTask);
 
     var layer = buildLayerTask.Result;

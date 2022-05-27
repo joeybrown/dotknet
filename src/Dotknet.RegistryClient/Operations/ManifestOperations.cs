@@ -183,8 +183,7 @@ public class ManifestOperations : IManifestOperations
       Content = streamContent
     };
     var response = await _httpClient.SendAsync(requestMessage);
-    // response.EnsureSuccessStatusCode();
-    var strResponse = await response.Content.ReadAsStringAsync();
+    response.EnsureSuccessStatusCode();
     var descriptor = await manifest.BuildDescriptor(baseDescriptor);
     return descriptor;
   }

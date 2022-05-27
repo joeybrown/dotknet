@@ -26,6 +26,7 @@ public interface IManifest : IManifestRegistryResponse
   Task<Descriptor> BuildDescriptor(Descriptor baseDescriptor);
   Task<Stream> ToJson();
   public MediaTypeEnum MediaType { get; set; }
+  public IEnumerable<Descriptor> Layers { get; }
 }
 
 public abstract class Manifest

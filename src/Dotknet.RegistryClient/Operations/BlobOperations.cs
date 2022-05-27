@@ -4,14 +4,14 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Dotknet.RegistryClient.Models;
-using Dotknet.RegistryClient.Models.Manifests;
 using Dotnet.RegistryClient.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Dotknet.RegistryClient.Operations;
 
 public interface IBlobOperations
 {
-  Task<Descriptor> CopyLayer(IImageReference sourceImage, IImageReference destinationImage, Descriptor descriptor);
+  Task CopyLayer(IImageReference sourceImage, IImageReference destinationImage, Hash digest);
   Task<(Descriptor descriptor, Hash diffId)> UploadLayer(IImageReference image, ILayer layer);
   Task<ConfigFile> GetConfig(IImageReference image, Descriptor descriptor);
   Task<Descriptor> UploadConfig(IImageReference image, ConfigFile config, Descriptor baseDescriptor);
@@ -21,10 +21,12 @@ public interface IBlobOperations
 public class BlobOperations: IBlobOperations
 {
   private readonly HttpClient _httpClient;
+  private readonly ILogger<BlobOperations> _logger;
 
-  public BlobOperations(HttpClient httpClient)
+  public BlobOperations(HttpClient httpClient, ILogger<BlobOperations> logger)
   {
     _httpClient = httpClient;
+    _logger = logger;
   }
 
   public async Task<ConfigFile> GetConfig(IImageReference image, Descriptor descriptor)
@@ -34,6 +36,27 @@ public class BlobOperations: IBlobOperations
     }
 
     throw new System.NotImplementedException();
+  }
+
+  public async Task<Stream> GetLayer(IImageReference image, Hash digest)
+  {
+    if (image.IsMcrImage){
+      return await GetLayerFromMcr(image, digest);
+    }
+
+    throw new System.NotImplementedException();
+  }
+
+  private async Task<Stream> GetLayerFromMcr(IImageReference image, Hash digest)
+  {
+    try {
+    var uri = new Uri($"https://mcr.microsoft.com/v2/{image.Repository}/blobs/{digest}/");
+    var response = await _httpClient.GetAsync(uri);
+    response.EnsureSuccessStatusCode();
+    return await response.Content.ReadAsStreamAsync();
+    }catch(Exception ex) {
+      throw;
+    }
   }
 
   private async Task UploadBlob(IImageReference image, Hash digest, StreamContent content){
@@ -83,16 +106,19 @@ public class BlobOperations: IBlobOperations
     using var content = new MemoryStream();
     await JsonSerializer.SerializeAsync(content, config);
     content.Seek(0, SeekOrigin.Begin);
-    var streamContent = new StreamContent(content);
+    using var streamContent = new StreamContent(content);
     var descriptor = await config.BuildDescriptor(baseDescriptor);
     await UploadBlob(image, descriptor.Digest, streamContent);
     return descriptor;
   }
 
-  public Task<Descriptor> CopyLayer(IImageReference sourceImage, IImageReference destinationImage, Descriptor descriptor)
+  public async Task CopyLayer(IImageReference sourceImage, IImageReference destinationImage, Hash digest)
   {
-    // todo :)
-    throw new NotImplementedException();
+    using var layer = await GetLayer(sourceImage, digest);
+    _logger.LogInformation("Copying Layer {Digest}... Size {Size}", digest, layer.Length);
+    layer.Seek(0, SeekOrigin.Begin);
+    using var streamContent = new StreamContent(layer);
+    await UploadBlob(destinationImage, digest, streamContent);
   }
 
   // public async Task<Descriptor> UploadManifest(IImageReference image, IManifest manifest, Descriptor baseDescriptor)

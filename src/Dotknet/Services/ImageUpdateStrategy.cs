@@ -71,11 +71,11 @@ public class MultiManifestRepositoryUpdateStrategy : AbstractManifestRepositoryU
     var client = _registryClientFactory.Create();
     var (layerDescriptor, diffId) = await client.BlobOperations.UploadLayer(_destinationImage, layer);
 
-    var imageCopyTasks = _manifestDescriptors.Select(async md => {
-      await client.BlobOperations.CopyLayer(_baseImage, _destinationImage, md.Descriptor);
-    });
+    var digests = _manifestDescriptors.SelectMany(md => md.Manifest.Layers).Select(x=>x.Digest).Distinct();
 
-    await Task.WhenAll(imageCopyTasks);
+    foreach (var digest in digests) {
+      await client.BlobOperations.CopyLayer(_baseImage, _destinationImage, digest);
+    }
 
     var manifestsUpdateTasks = _manifestDescriptors.Select(async md =>
     {
