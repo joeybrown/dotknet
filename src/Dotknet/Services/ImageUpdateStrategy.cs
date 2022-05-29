@@ -63,9 +63,9 @@ public class MultiManifestRepositoryUpdateStrategy : AbstractManifestRepositoryU
     _destinationImage = destinationImage;
     _baseImage = baseImage;
     _manifestIndex = manifestIndex;
-    // todo: handle windows 
     _manifestDescriptors = manifestDescriptors.Where(md =>
-      !md.Descriptor.Platform?.OS.Equals("windows", System.StringComparison.InvariantCultureIgnoreCase) ?? false);
+      (md.Descriptor.Platform?.OS.Equals("linux", System.StringComparison.InvariantCultureIgnoreCase) ?? false) &&
+      (md.Descriptor.Platform?.Architecture.Equals("amd64", System.StringComparison.InvariantCultureIgnoreCase) ?? false));
   }
 
   public async Task<Hash> UpdateRepositoryImage(ILayer layer)
@@ -77,7 +77,7 @@ public class MultiManifestRepositoryUpdateStrategy : AbstractManifestRepositoryU
 
     foreach (var digest in digests)
     {
-        await client.BlobOperations.CopyLayer(_baseImage, _destinationImage, digest);
+      await client.BlobOperations.CopyLayer(_baseImage, _destinationImage, digest);
     }
 
     var manifestsUpdateTasks = _manifestDescriptors.Select(async md =>
@@ -91,7 +91,7 @@ public class MultiManifestRepositoryUpdateStrategy : AbstractManifestRepositoryU
       md.Manifest.Config = configDescriptor;
       md.Manifest.AddLayer(layerDescriptor);
       return await client.ManifestOperations.UploadManifest(_destinationImage, md.Manifest, md.Descriptor);
-    });
+    }).ToArray();
 
     await Task.WhenAll(manifestsUpdateTasks);
 

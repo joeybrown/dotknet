@@ -42,6 +42,8 @@ public class PublishService : IPublishService
 
     var hash = await updateService.UpdateRepositoryImage(layer);
 
+    _logger.LogInformation("Image loaded. Digest: {Digest}", hash.ToString());
+
     layer.Dispose();
   }
 

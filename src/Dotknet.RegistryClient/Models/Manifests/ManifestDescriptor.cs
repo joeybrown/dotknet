@@ -1,3 +1,13 @@
 namespace Dotknet.RegistryClient.Models.Manifests;
 
-public record ManifestDescriptor(Descriptor Descriptor, IManifest Manifest) { }
+public class ManifestDescriptor
+{
+  public Descriptor Descriptor { get; set; }
+  public IManifest Manifest { get; set; }
+
+  public ManifestDescriptor(Descriptor descriptor, IManifest manifest)
+  {
+    Descriptor = descriptor;
+    Manifest = manifest;
+  }
+}

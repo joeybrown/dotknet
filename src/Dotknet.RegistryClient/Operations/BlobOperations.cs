@@ -15,10 +15,9 @@ public interface IBlobOperations
   Task<(Descriptor descriptor, Hash diffId)> UploadLayer(IImageReference image, ILayer layer);
   Task<ConfigFile> GetConfig(IImageReference image, Descriptor descriptor);
   Task<Descriptor> UploadConfig(IImageReference image, ConfigFile config, Descriptor baseDescriptor);
-  // Task<Descriptor> UploadManifest(IImageReference image, IManifest manifest, Descriptor baseDescriptor);
 }
 
-public class BlobOperations: IBlobOperations
+public class BlobOperations : IBlobOperations
 {
   private readonly HttpClient _httpClient;
   private readonly ILogger<BlobOperations> _logger;
@@ -31,7 +30,8 @@ public class BlobOperations: IBlobOperations
 
   public async Task<ConfigFile> GetConfig(IImageReference image, Descriptor descriptor)
   {
-    if (image.IsMcrImage){
+    if (image.IsMcrImage)
+    {
       return await GetConfigFromMcr(image, descriptor);
     }
 
@@ -40,7 +40,8 @@ public class BlobOperations: IBlobOperations
 
   public async Task<Stream> GetLayer(IImageReference image, Hash digest)
   {
-    if (image.IsMcrImage){
+    if (image.IsMcrImage)
+    {
       return await GetLayerFromMcr(image, digest);
     }
 
@@ -49,17 +50,14 @@ public class BlobOperations: IBlobOperations
 
   private async Task<Stream> GetLayerFromMcr(IImageReference image, Hash digest)
   {
-    try {
     var uri = new Uri($"https://mcr.microsoft.com/v2/{image.Repository}/blobs/{digest}/");
     var response = await _httpClient.GetAsync(uri);
     response.EnsureSuccessStatusCode();
     return await response.Content.ReadAsStreamAsync();
-    }catch(Exception ex) {
-      throw;
-    }
   }
 
-  private async Task UploadBlob(IImageReference image, Hash digest, StreamContent content){
+  private async Task UploadBlob(IImageReference image, Hash digest, StreamContent content)
+  {
     var locationUrl = new Uri($"{image.Domain}/v2/{image.Repository}/blobs/uploads/");
     var locationResponse = await _httpClient.PostAsync(locationUrl, null);
     locationResponse.EnsureSuccessStatusCode();
@@ -76,7 +74,8 @@ public class BlobOperations: IBlobOperations
     using var streamContent = new StreamContent(content);
     await UploadBlob(image, digest, streamContent);
 
-    var descriptor = new Descriptor{
+    var descriptor = new Descriptor
+    {
       MediaType = MediaTypeEnum.DockerUncompressedLayer,
       Size = layer.Size(),
       Digest = digest
@@ -86,7 +85,8 @@ public class BlobOperations: IBlobOperations
     return (descriptor, diffId);
   }
 
-  private async Task<ConfigFile> GetConfigFromMcr(IImageReference image, Descriptor descriptor){    
+  private async Task<ConfigFile> GetConfigFromMcr(IImageReference image, Descriptor descriptor)
+  {
     var endpoint = new Uri($"https://mcr.microsoft.com/v2/{image.Repository}/blobs/{descriptor.Digest}");
     var requestMessage = new HttpRequestMessage
     {
@@ -94,11 +94,19 @@ public class BlobOperations: IBlobOperations
       RequestUri = endpoint
     };
     var response = await _httpClient.SendAsync(requestMessage);
-    response.EnsureSuccessStatusCode();
-    var str = await response.Content.ReadAsStringAsync();
-    var content = await response.Content.ReadAsStreamAsync();
-    var config = await JsonSerializer.DeserializeAsync<ConfigFile>(content);
-    return config;
+    try
+    {
+      response.EnsureSuccessStatusCode();
+      var content = await response.Content.ReadAsStreamAsync();
+      var config = await JsonSerializer.DeserializeAsync<ConfigFile>(content);
+      return config;
+    }
+    catch (Exception ex)
+    {
+      var str = await response.Content.ReadAsStringAsync();
+      throw ex;
+    }
+
   }
 
   public async Task<Descriptor> UploadConfig(IImageReference image, ConfigFile config, Descriptor baseDescriptor)
@@ -120,14 +128,4 @@ public class BlobOperations: IBlobOperations
     using var streamContent = new StreamContent(layer);
     await UploadBlob(destinationImage, digest, streamContent);
   }
-
-  // public async Task<Descriptor> UploadManifest(IImageReference image, IManifest manifest, Descriptor baseDescriptor)
-  // {
-  //   using var json = await manifest.ToJson();
-  //   json.Seek(0, SeekOrigin.Begin);
-  //   var streamContent = new StreamContent(json);
-  //   var descriptor = await manifest.BuildDescriptor(baseDescriptor);
-  //   await UploadBlob(image, descriptor.Digest, streamContent);
-  //   return descriptor;
-  // }
 }
