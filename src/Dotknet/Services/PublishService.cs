@@ -1,13 +1,14 @@
 using System.Threading.Tasks;
-using Dotknet.Models;
 using Dotknet.RegistryClient;
+using Dotknet.RegistryClient.Models;
+using Dotknet.RegistryClient.Models.Manifests;
 using Microsoft.Extensions.Logging;
 
 namespace Dotknet.Services;
 
 public interface IPublishService
 {
-  Task Execute(string project, string output, string baseImage, string layerRoot = "dotnet-app");
+  Task Execute(string project, string output, IImageReference baseImage, IImageReference destinationImage, bool skipDotnetBuild, string layerRoot);
 }
 
 public class PublishService : IPublishService
@@ -17,7 +18,11 @@ public class PublishService : IPublishService
   private readonly IRegistryClientFactory _registryClientFactory;
   private readonly IArchiveService _archiveService;
 
-  public PublishService(ILogger<PublishService> logger, IDotnetPublishService dotnetPublishService, IRegistryClientFactory registryClientFactory, IArchiveService archiveService)
+  public PublishService(
+    ILogger<PublishService> logger, 
+    IDotnetPublishService dotnetPublishService, 
+    IRegistryClientFactory registryClientFactory, 
+    IArchiveService archiveService)
   {
     _logger = logger;
     _dotnetPublishService = dotnetPublishService;
@@ -25,18 +30,40 @@ public class PublishService : IPublishService
     _archiveService = archiveService;
   }
 
-  public async Task Execute(string project, string output, string baseImage, string layerRoot = "dotnet-app")
+  public async Task Execute(string project, string output, IImageReference baseImage, IImageReference destinationImage, bool skipDotnetBuild, string layerRoot)
   {
-    var registryClient = _registryClientFactory.Create();
-    var appLayerTask = BuildLayer(project, output, layerRoot);
-    var baseImageManifestTask = registryClient.ManifestOperations.GetManifest(baseImage);
-    await Task.WhenAll(appLayerTask, baseImageManifestTask);
+    var buildLayerTask = BuildLayer(project, output, skipDotnetBuild, layerRoot);
+    var buildUpdateServiceTask = BuildImageUpdateService(baseImage, destinationImage);
+    
+    await Task.WhenAll(buildLayerTask, buildUpdateServiceTask);
+
+    var layer = buildLayerTask.Result;
+    var updateService = buildUpdateServiceTask.Result;
+
+    var hash = await updateService.UpdateRepositoryImage(layer);
+
+    _logger.LogInformation("Image loaded. Digest: {Digest}", hash.ToString());
+
+    layer.Dispose();
   }
 
-  private async Task<ILayer> BuildLayer(string project, string output, string layerRoot)
+  private async Task<ImageUpdateStrategy> BuildImageUpdateService(IImageReference baseImage, IImageReference destinationImage) {
+    var registryClient = _registryClientFactory.Create();
+    var manifest = await registryClient.ManifestOperations.GetManifest(baseImage);
+    if (!manifest.IsManifestIndex) {
+      return new SingleManifestRepositoryUpdateStrategy(_registryClientFactory, baseImage, destinationImage, manifest);
+    }
+    var manifestIndex = (IManifestIndex) manifest;
+    var manifests = await registryClient.ManifestOperations.EnumerateManifests(baseImage, manifestIndex);
+    return new MultiManifestRepositoryUpdateStrategy(_registryClientFactory, baseImage, destinationImage, manifestIndex, manifests);
+  }
+
+  private async Task<ILayer> BuildLayer(string project, string output, bool skipDotnetBuild, string layerRoot)
   {
-    var dotnetPublishDirectory = await _dotnetPublishService.Execute(project, output);
-    var layer = await _archiveService.Execute(dotnetPublishDirectory, layerRoot);
+    if (!skipDotnetBuild) {
+      await _dotnetPublishService.Execute(project, output);
+    }
+    var layer = await _archiveService.Execute(output, layerRoot);
     return (ILayer)layer;
   }
 }

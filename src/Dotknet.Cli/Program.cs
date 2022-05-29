@@ -68,13 +68,40 @@ class Program
       {
         IsRequired = true,
       });
-      command.AddOption(new Option<string>("--baseImage")
+      command.AddOption(new Option<string>("--baseImageDomain")
       {
         IsRequired = true,
       });
+      command.AddOption(new Option<string>("--baseImageRepository")
+      {
+        IsRequired = true,
+      });
+      command.AddOption(new Option<string>("--destinationImageDomain")
+      {
+        IsRequired = true,
+      });
+      command.AddOption(new Option<string>("--destinationImageRepository")
+      {
+        IsRequired = true,
+      });
+      command.AddOption(new Option<bool>("--skipDotnetBuild")
+      {
+        IsRequired = false,
+      });
       command.Handler = CommandHandler.Create<IHost>(async host => {
         var options = host.Services.GetRequiredService<IOptions<PublishCommandOptions>>().Value;
-        await host.Services.GetRequiredService<IPublishService>().Execute(options.Project!, options.Output!, options.BaseImage!);
+
+        var baseImage = new ImageReference{
+          Domain = options.BaseImageDomain,
+          Repository = options.BaseImageRepository
+        };
+
+        var destinationImage = new ImageReference{
+          Domain = options.DestinationImageDomain,
+          Repository = options.DestinationImageRepository
+        };
+
+        await host.Services.GetRequiredService<IPublishService>().Execute(options.Project!, options.Output!, baseImage, destinationImage, options.SkipDotnetBuild, options.LayerRoot);
       });
       return command;
     }

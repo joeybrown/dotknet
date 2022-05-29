@@ -32,6 +32,18 @@ public class Hash
   {
     return $"{Algorithm}:{Hex}";
   }
+
+  public override bool Equals(object? obj)
+  {
+    return obj is Hash hash &&
+           Algorithm == hash.Algorithm &&
+           Hex == hash.Hex;
+  }
+
+  public override int GetHashCode()
+  {
+    return HashCode.Combine(Algorithm, Hex);
+  }
 }
 
 public class HashConverter : JsonConverter<Hash>
@@ -44,6 +56,6 @@ public class HashConverter : JsonConverter<Hash>
 
   public override void Write(Utf8JsonWriter writer, Hash value, JsonSerializerOptions options)
   {
-    writer.WriteRawValue(value.ToString());
+    JsonSerializer.Serialize(writer, value.ToString());
   }
 }

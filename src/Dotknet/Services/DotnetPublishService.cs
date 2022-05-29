@@ -7,7 +7,7 @@ namespace Dotknet.Services;
 
 public interface IDotnetPublishService
 {
-  Task<DirectoryInfo> Execute(string project, string output);
+  Task Execute(string project, string output);
 }
 
 public class DotnetPublishService : IDotnetPublishService
@@ -19,7 +19,7 @@ public class DotnetPublishService : IDotnetPublishService
     _logger = logger;
   }
 
-  public Task<DirectoryInfo> Execute(string project, string output)
+  public Task Execute(string project, string output)
   {
     var outputDirectory = new DirectoryInfo(output);
     if (outputDirectory.Exists)

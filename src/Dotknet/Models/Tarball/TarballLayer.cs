@@ -1,7 +1,6 @@
 using System;
 using System.IO;
-using System.Security.Cryptography;
-using System.Text;
+using Dotknet.RegistryClient.Extensions;
 using Dotknet.RegistryClient.Models;
 using SharpCompress.Archives.Tar;
 
@@ -37,19 +36,22 @@ public class TarballLayer : ILayer
     buffer[5] = (byte)(seconds >> 8);
     buffer[6] = (byte)(seconds >> 16);
     buffer[7] = (byte)(seconds >> 24);
-    return new MemoryStream(buffer);
+    var stream = new MemoryStream(buffer);
+    return stream;
   }
 
   public Hash DiffId()
   {
     using var stream = Uncompressed();
-    return stream.GetHash();
+    var hash = stream.GetHash();
+    return hash;
   }
 
   public Hash Digest()
   {
     using var stream = Compressed();
-    return stream.GetHash();
+    var hash = stream.GetHash();
+    return hash;
   }
 
   public MediaTypeEnum MediaType()
@@ -60,13 +62,15 @@ public class TarballLayer : ILayer
   public long Size()
   {
     using var stream = Compressed();
-    return stream.Length;
+    var length = stream.Length;
+    return length;
   }
 
   public Stream Uncompressed()
   {
     var memoryStream = new MemoryStream();
     _tarArchive.SaveTo(memoryStream, new SharpCompress.Writers.WriterOptions(SharpCompress.Common.CompressionType.None));
+    memoryStream.Seek(0, SeekOrigin.Begin);
     return memoryStream;
   }
 
@@ -89,25 +93,5 @@ public class TarballLayer : ILayer
   public override string ToString()
   {
     return $"Layer DiffId: {DiffId().Hex!.Substring(0, 6)} Digest: {Digest().Hex!.Substring(0, 6)}";
-  }
-}
-
-public static class StreamExtensions {
-
-  public static Hash GetHash(this Stream stream)
-  {
-    using var hashAlgorithm = SHA256.Create();
-    stream.Seek(0, SeekOrigin.Begin);
-    var data = hashAlgorithm.ComputeHash(stream);
-    var sBuilder = new StringBuilder();
-    for (int i = 0; i < data.Length; i++)
-    {
-      sBuilder.Append(data[i].ToString("x2"));
-    }
-    
-    return new Hash {
-      Hex = sBuilder.ToString(),
-      Algorithm = "sha256"
-    };
   }
 }
