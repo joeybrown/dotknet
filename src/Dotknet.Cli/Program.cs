@@ -10,7 +10,6 @@ using System.CommandLine.Hosting;
 using System.CommandLine.Parsing;
 using Serilog;
 using Serilog.Events;
-using Dotknet.Services;
 using Dotknet.Cli.Options;
 using Microsoft.Extensions.Options;
 using Dotknet.RegistryClient;

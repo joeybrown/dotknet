@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Nuke.Common.Tools.DotNet;
 
-namespace Dotknet.Services;
+namespace Dotknet;
 
 public interface IDotnetPublishService
 {

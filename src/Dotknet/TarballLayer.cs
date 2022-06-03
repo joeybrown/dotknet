@@ -4,7 +4,7 @@ using Dotknet.RegistryClient.Extensions;
 using Dotknet.RegistryClient.Models;
 using SharpCompress.Archives.Tar;
 
-namespace Dotknet.Models.Tarball;
+namespace Dotknet;
 
 //todo: consider perf/caching
 public class TarballLayer : ILayer

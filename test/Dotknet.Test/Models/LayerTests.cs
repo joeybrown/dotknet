@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using Dotknet.Models.Tarball;
 using FluentAssertions;
 using SharpCompress.Archives.Tar;
 using Xunit;
