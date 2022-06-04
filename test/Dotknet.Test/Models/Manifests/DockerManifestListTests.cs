@@ -2,6 +2,7 @@ using System.IO;
 using Dotknet.RegistryClient.Models.Manifests;
 using FluentAssertions;
 using Xunit;
+using static Dotknet.Test.TestResources.TestResourceHelpers;
 
 namespace Dotknet.Test.Models.Registry;
 

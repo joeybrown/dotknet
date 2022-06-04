@@ -1,0 +1,103 @@
+{
+  "architecture": "amd64",
+  "config": {
+    "Hostname": "",
+    "Domainname": "",
+    "User": "",
+    "AttachStdin": false,
+    "AttachStdout": false,
+    "AttachStderr": false,
+    "Tty": false,
+    "OpenStdin": false,
+    "StdinOnce": false,
+    "Env": [
+      "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "ASPNETCORE_URLS=http://+:80",
+      "DOTNET_RUNNING_IN_CONTAINER=true",
+      "DOTNET_VERSION=6.0.5"
+    ],
+    "Cmd": [
+      "bash"
+    ],
+    "Image": "sha256:5c4f57d643d168e7615c7b712e01ba02ebc363b29ce84348ce3d0552f921165b",
+    "Volumes": null,
+    "WorkingDir": "",
+    "Entrypoint": null,
+    "OnBuild": null,
+    "Labels": null
+  },
+  "container": "7616f990495a05e8406edce0fd5e1da21ae962d5855d48464b37d16387f0044c",
+  "container_config": {
+    "Hostname": "",
+    "Domainname": "",
+    "User": "",
+    "AttachStdin": false,
+    "AttachStdout": false,
+    "AttachStderr": false,
+    "Tty": false,
+    "OpenStdin": false,
+    "StdinOnce": false,
+    "Env": [
+      "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "ASPNETCORE_URLS=http://+:80",
+      "DOTNET_RUNNING_IN_CONTAINER=true",
+      "DOTNET_VERSION=6.0.5"
+    ],
+    "Cmd": [
+      "/bin/sh",
+      "-c",
+      "ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet"
+    ],
+    "Image": "sha256:5c4f57d643d168e7615c7b712e01ba02ebc363b29ce84348ce3d0552f921165b",
+    "Volumes": null,
+    "WorkingDir": "",
+    "Entrypoint": null,
+    "OnBuild": null,
+    "Labels": null
+  },
+  "created": "2022-05-28T08:32:27.34169482Z",
+  "docker_version": "20.10.12",
+  "history": [
+    {
+      "created": "2022-05-28T01:20:23.14142546Z",
+      "created_by": "/bin/sh -c #(nop) ADD file:134f25aec8adf83cb940ba073a3409ca85dbb5ae592b704f95193e7d2539a3bc in / "
+    },
+    {
+      "created": "2022-05-28T01:20:23.517927306Z",
+      "created_by": "/bin/sh -c #(nop)  CMD [\"bash\"]",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-05-28T08:31:48.050889102Z",
+      "created_by": "/bin/sh -c apt-get update     && apt-get install -y --no-install-recommends         ca-certificates                 libc6         libgcc1         libgssapi-krb5-2         libicu67         libssl1.1         libstdc++6         zlib1g     && rm -rf /var/lib/apt/lists/*"
+    },
+    {
+      "created": "2022-05-28T08:31:48.520631511Z",
+      "created_by": "/bin/sh -c #(nop)  ENV ASPNETCORE_URLS=http://+:80 DOTNET_RUNNING_IN_CONTAINER=true",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-05-28T08:32:22.043298586Z",
+      "created_by": "/bin/sh -c #(nop)  ENV DOTNET_VERSION=6.0.5",
+      "empty_layer": true
+    },
+    {
+      "created": "2022-05-28T08:32:24.607350821Z",
+      "created_by": "/bin/sh -c #(nop) COPY dir:49b45e3ccadd0521a7513b91e6cb00a52ff23f9e8004ce74c832042e93fe7e33 in /usr/share/dotnet "
+    },
+    {
+      "created": "2022-05-28T08:32:27.34169482Z",
+      "created_by": "/bin/sh -c ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet"
+    }
+  ],
+  "os": "linux",
+  "rootfs": {
+    "type": "layers",
+    "diff_ids": [
+      "sha256:ad6562704f3759fb50f0d3de5f80a38f65a85e709b77fd24491253990f30b6be",
+      "sha256:c891b6c5469a0e8b72be529a7d376390a28f73494008378568daae8eedb8c59c",
+      "sha256:d1597429d57f28f871e2beae11ecfd1e7059e60ccc993740d9e9649160e7b299",
+      "sha256:bb19eedc1dadf615d9c11ff380d04c0832a4116eeb485402e1a9430d5c5f4171"
+    ]
+  }
+}
