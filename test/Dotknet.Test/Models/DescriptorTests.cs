@@ -11,6 +11,6 @@ public class DescriptorTests
   public void DeserializeDescriptor()
   {
     var descriptor = ReadFromFile<Descriptor>("Descriptor.json");
-    descriptor!.MediaType.Should().BeEquivalentTo(MediaTypeEnum.DockerManifestSchema2);
+    descriptor.MediaType.Should().BeEquivalentTo(MediaTypeEnum.DockerManifestSchema2);
   }
 }

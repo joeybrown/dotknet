@@ -11,6 +11,9 @@ public static class TestResourceHelpers
     var sourceFile = Path.Join("TestResources", filename);
     string content = File.ReadAllText(sourceFile);
     var deserialized = JsonSerializer.Deserialize<T>(content);
+    if (deserialized is null){
+      throw new System.Exception("Could not find file");
+    }
     return deserialized;
   }
 

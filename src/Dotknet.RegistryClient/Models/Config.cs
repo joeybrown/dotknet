@@ -19,6 +19,12 @@ public class ConfigFile
   [JsonPropertyName("author")]
   public string? Author { get; set; }
 
+  public ConfigFile SetWorkingDir(string workingDir)
+  {
+    Config.SetWorkingDir(workingDir);
+    return this;
+  }
+
   [JsonPropertyName("container")]
   public string? Container { get; set; }
 
@@ -43,12 +49,21 @@ public class ConfigFile
   [JsonPropertyName("os.version")]
   public string OSVersion { get; set; }
 
-  public ConfigFile AddLayer(Hash diffId) {
+  public ConfigFile AddLayer(Hash diffId)
+  {
     RootFS.AddLayer(diffId);
     return this;
   }
 
-  public async Task<Descriptor> BuildDescriptor(Descriptor baseDescriptor){
+
+  public ConfigFile SetEntrypoint(params string[] arguments)
+  {
+    Config.SetEntrypoint(arguments);
+    return this;
+  }
+
+  public async Task<Descriptor> BuildDescriptor(Descriptor baseDescriptor)
+  {
     var descriptor = JsonSerializer.Deserialize<Descriptor>(JsonSerializer.Serialize(baseDescriptor));
 
     using var stream = new MemoryStream();
@@ -186,4 +201,16 @@ public class Config
 
   [JsonPropertyName("Shell")]
   public IEnumerable<string>? Shell { get; set; }
+
+  internal Config SetEntrypoint(params string[] arguments)
+  {
+    Entrypoint = arguments;
+    return this;
+  }
+
+  internal Config SetWorkingDir(string workingDir)
+  {
+    WorkingDir = workingDir;
+    return this;
+  }
 }
