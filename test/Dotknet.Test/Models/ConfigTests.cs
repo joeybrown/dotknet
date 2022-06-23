@@ -8,22 +8,19 @@ using static Dotknet.Test.TestResources.TestResourceHelpers;
 namespace Dotknet.Test.Models;
 
 public class ConfigTests {
-
   [Fact]
-  public void SetEntrypoint_Should_Set_Expected() {
+  public void SetConfig_Should_SetExpected() {
     var sut = ReadFromFile<ConfigFile>("DotnetRuntimeConfig.json");
-    sut.SetEntrypoint("dotnet", "foo.dll"); 
-    sut.Config.Entrypoint.Should().BeEquivalentTo("dotnet", "foo.dll");
+    var originalEnv = sut.Config.Env?.ToArray() ?? Array.Empty<string>();
+    var workingDir = "/foo-bar";
+    var entryPoint = new [] {"dotnet", "foo.dll"};
+    sut.SetConfig(workingDir, entryPoint);
+    sut.Config.WorkingDir.Should().BeEquivalentTo(workingDir);
+    sut.Config.Entrypoint.Should().BeEquivalentTo(entryPoint);
+    sut.Config.Env.Should().BeEquivalentTo(originalEnv);
   }
 
   [Fact]
-  public void SetWorkingDir_Should_Set_Expected() {
-    var sut = ReadFromFile<ConfigFile>("DotnetRuntimeConfig.json");
-    sut.SetWorkingDir("/foo-bar");
-    sut.Config.WorkingDir.Should().BeEquivalentTo("/foo-bar");
-  }
-
-    [Fact]
   public void AddHistory_Should_Add_Expected() {
     var sut = ReadFromFile<ConfigFile>("DotnetRuntimeConfig.json");
     sut.History.Should().HaveCount(7);
@@ -40,5 +37,12 @@ public class ConfigTests {
     lastHistoryEntry.CreatedBy.Should().BeEquivalentTo("dotknet");
     lastHistoryEntry.Comment.Should().BeEquivalentTo("Adding a dotnet app layer");
     lastHistoryEntry.Created.Should().Be(new DateTime(1970, 1, 1, 0, 0, 1, DateTimeKind.Utc));
+  }
+
+  [Fact]
+  public void SetCreated_Should_SetExpected(){
+    var sut = ReadFromFile<ConfigFile>("DotnetRuntimeConfig.json");
+    sut.SetCreated(new DateTime(1970, 1, 1, 0, 0, 1, DateTimeKind.Utc));
+    sut.Created.Should().Be(new DateTime(1970, 1, 1, 0, 0, 1, DateTimeKind.Utc));
   }
 }

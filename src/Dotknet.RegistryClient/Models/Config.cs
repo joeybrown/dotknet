@@ -68,6 +68,12 @@ public class ConfigFile
     return this;
   }
 
+  public ConfigFile SetCreated(DateTime timestamp)
+  {
+    Created = timestamp;
+    return this;
+  }
+
   public async Task<Descriptor> BuildDescriptor(Descriptor baseDescriptor)
   {
     var descriptor = JsonSerializer.Deserialize<Descriptor>(JsonSerializer.Serialize(baseDescriptor));
@@ -79,6 +85,15 @@ public class ConfigFile
     descriptor!.Size = stream.Length;
 
     return descriptor;
+  }
+
+  public ConfigFile SetConfig(string workingDir, params string[] entryPoint)
+  {
+    Config = new Config()
+      .SetEntrypoint(entryPoint)
+      .SetWorkingDir(workingDir)
+      .SetEnv(Config.Env?.ToArray() ?? Array.Empty<string>());
+    return this;
   }
 }
 
@@ -208,9 +223,15 @@ public class Config
   [JsonPropertyName("Shell")]
   public IEnumerable<string>? Shell { get; set; }
 
-  internal Config SetEntrypoint(params string[] arguments)
+  internal Config SetEntrypoint(params string[] entryPoint)
   {
-    Entrypoint = arguments;
+    Entrypoint = entryPoint;
+    return this;
+  }
+
+  internal Config SetEnv(params string[] env)
+  {
+    Env = env;
     return this;
   }
 
