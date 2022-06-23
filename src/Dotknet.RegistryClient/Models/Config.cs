@@ -55,6 +55,12 @@ public class ConfigFile
     return this;
   }
 
+  public ConfigFile AddHistory(params History[] history)
+  {
+    var originalHistory = History ?? Array.Empty<History>();
+    History = originalHistory.Concat(history);
+    return this;
+  }
 
   public ConfigFile SetEntrypoint(params string[] arguments)
   {
